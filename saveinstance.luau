@@ -3,6 +3,157 @@
 --!divine-intellect
 -- https://discord.gg/wx4ThpAsmw
 
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DELETE ME"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = game:GetService("StarterGui")
+
+-- Ana Frame
+local frame = Instance.new("Frame")
+frame.Name = "DELETE ME"
+frame.Parent = screenGui
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+frame.BackgroundTransparency = 0
+frame.BorderSizePixel = 0
+frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+frame.Size = UDim2.new(1, 0, 0.4, 120)
+frame.Visible = true
+frame.ZIndex = 1
+
+-- UICorner (köşe yuvarlama)
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 8)
+uiCorner.Parent = frame
+
+local aspect = Instance.new("UIAspectRatioConstraint")
+aspect.AspectRatio = 1.95  -- Genişlik / Yükseklik oranı
+aspect.Parent = frame
+
+-- UIStroke (kenarlık)
+local frameStroke = Instance.new("UIStroke")
+frameStroke.Parent = frame
+frameStroke.Color = Color3.fromRGB(0, 0, 0)
+frameStroke.Thickness = 3
+frameStroke.Transparency = 0.12
+frameStroke.LineJoinMode = Enum.LineJoinMode.Round
+
+-- UIGradient (arka plan gradient)
+local uiGradient = Instance.new("UIGradient")
+uiGradient.Parent = frame
+uiGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,241,133)),
+    ColorSequenceKeypoint.new(0.498, Color3.fromRGB(244,255,42)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,241,133))
+})
+uiGradient.Rotation = 0
+
+-- Pattern ImageLabel
+local pattern = Instance.new("ImageLabel")
+pattern.Name = "Pattern"
+pattern.Parent = frame
+pattern.AnchorPoint = Vector2.new(0.5, 0.5)
+pattern.BackgroundTransparency = 1
+pattern.Image = "rbxassetid://9387496824"
+pattern.ImageColor3 = Color3.fromRGB(255, 255, 255)
+pattern.ImageTransparency = 0.87
+pattern.Position = UDim2.new(0.5, 0, 0.499, 0)
+pattern.Size = UDim2.new(1, 0, 0.999, 0)
+pattern.ScaleType = Enum.ScaleType.Tile
+pattern.TileSize = UDim2.new(0, 30, 0, 30)
+pattern.ZIndex = 4
+
+-- Sun ImageLabel
+local sun = Instance.new("ImageLabel")
+sun.Name = "Sun"
+sun.Parent = frame
+sun.AnchorPoint = Vector2.new(0.5, 0.5)
+sun.BackgroundTransparency = 1
+sun.Image = "rbxassetid://70917085108816"
+sun.Position = UDim2.new(0.983, 0, 0.005, 0)
+sun.Size = UDim2.new(0.149, 0, 0.263, 0)
+sun.ScaleType = Enum.ScaleType.Fit
+sun.ZIndex = 10
+
+-- Speech Bubble ImageLabel
+local speech = Instance.new("ImageLabel")
+speech.Name = "Speech"
+speech.Parent = frame
+speech.AnchorPoint = Vector2.new(0.5, 0.5)
+speech.BackgroundTransparency = 1
+speech.Image = "rbxassetid://125449204846728"
+speech.Position = UDim2.new(0.882, 0, -0.099, 0)
+speech.Rotation = -5
+speech.Size = UDim2.new(0.144, 0, 0.148, 0)
+speech.ScaleType = Enum.ScaleType.Fit
+speech.ZIndex = 11
+
+-- Speech içindeki TextLabel
+local speechText = Instance.new("TextLabel")
+speechText.Name = "SpeechText"
+speechText.Parent = speech
+speechText.BackgroundTransparency = 1
+speechText.Font = Enum.Font.FredokaOne
+speechText.Text = "Join Discord Server"
+speechText.TextColor3 = Color3.fromRGB(0, 255, 87)
+speechText.TextScaled = true
+speechText.TextSize = 14
+speechText.TextWrapped = true
+speechText.Position = UDim2.new(0.067, 0, 0.127, 0)
+speechText.Size = UDim2.new(0.877, 0, 0.633, 0)
+speechText.ZIndex = 12
+
+local speechStroke = Instance.new("UIStroke")
+speechStroke.Parent = speechText
+speechStroke.Color = Color3.fromRGB(0, 0, 0)
+speechStroke.Thickness = 1.93
+
+-- Owner TextLabel
+local ownerText = Instance.new("TextLabel")
+ownerText.Name = "OwnerText"
+ownerText.Parent = frame
+ownerText.AnchorPoint = Vector2.new(0.5, 0)
+ownerText.BackgroundTransparency = 1
+ownerText.Font = Enum.Font.FredokaOne
+ownerText.Text = "Angelus Decompiles (DECOMPILED THIS)"
+ownerText.TextColor3 = Color3.fromRGB(255, 255, 255)
+ownerText.TextScaled = true
+ownerText.TextSize = 18
+ownerText.TextWrapped = true
+ownerText.Position = UDim2.new(0.493, 0, -0.008, 0)
+ownerText.Size = UDim2.new(0.83, 0, 0.62, 0)
+ownerText.ZIndex = 5
+
+local ownerStroke = Instance.new("UIStroke")
+ownerStroke.Parent = ownerText
+ownerStroke.Color = Color3.fromRGB(0, 0, 0)
+ownerStroke.Thickness = 3.87
+
+-- Discord TextLabel
+local discordText = Instance.new("TextLabel")
+discordText.Name = "DiscordText"
+discordText.Parent = frame
+discordText.AnchorPoint = Vector2.new(0.5, 0)
+discordText.BackgroundTransparency = 1
+discordText.Font = Enum.Font.FredokaOne
+discordText.Text = "Discord Server Link (discord.gg/CYXme7yEG9)"
+discordText.TextColor3 = Color3.fromRGB(255, 255, 255)
+discordText.TextScaled = true
+discordText.TextSize = 18
+discordText.TextWrapped = true
+discordText.Position = UDim2.new(0.501, 0, 0.52, 0)
+discordText.Size = UDim2.new(0.8, 0, 0.55, 0)
+discordText.ZIndex = 10
+
+local discordStroke = Instance.new("UIStroke")
+discordStroke.Parent = discordText
+discordStroke.Color = Color3.fromRGB(0, 0, 0)
+discordStroke.Thickness = 3.87
+
+-- Make sure the GUI is visible and reachable
+screenGui.Enabled = true
+
 local function string_find(s, pattern, init)
 	return string.find(s, pattern, init, true)
 end
@@ -2467,9 +2618,9 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 		Decompile = EXECUTOR_NAME ~= "Velocity", -- TODO Temp fix for crashes
 		scriptcache = true,
 		-- decomptype = "",
-		DecompileTimeout = 10,
+		DecompileTimeout = 50,
 		-- * New:
-		__DEBUG_MODE = false,
+		__DEBUG_MODE = true,
 
 		-- Binary = false, -- true in syn newer versions (false in our case because no binary support yet), Description: Saves everything in Binary Mode (rbxl/rbxm).
 		Callback = false,
@@ -2501,8 +2652,8 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 		BoostFPS = false,
 		ShutdownWhenDone = false,
 		AntiIdle = true,
-		Anonymous = false,
-		ReadMe = true,
+		Anonymous = true,
+		ReadMe = false,
 		FilePath = false,
 		AvoidFileOverwrite = true,
 		Object = false,
@@ -2513,7 +2664,7 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 		IgnorePropertiesOfNotScriptsOnScriptsMode = false,
 		IgnoreSpecialProperties = ArrayToDict({ "Fluxus", "Delta", "Solara" })[EXECUTOR_NAME] or false, -- ! Please submit more Executors that crash on gethiddenproperty (with this disabled basically)
 
-		IsolateLocalPlayer = false, --  #service.StarterGui:GetChildren() == 0
+		IsolateLocalPlayer = true, --  #service.StarterGui:GetChildren() == 0
 		IsolateLocalPlayerCharacter = false,
 		IsolatePlayers = false,
 		IsolateStarterPlayer = false,
@@ -2873,15 +3024,19 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 		local mode = string.lower(OPTIONS.mode)
 		local tmp = table.clone(OPTIONS.ExtraInstances)
 
-		local PlaceName = game.PlaceId
+		local PlaceName = ""
 
-		pcall(function()
-			PlaceName ..= " " .. service.MarketplaceService:GetProductInfoAsync(PlaceName).Name
-		end)
+pcall(function()
+    PlaceName = service.MarketplaceService:GetProductInfo(game.PlaceId).Name
+end)
 
-		local function sanitizeFileName(str)
-			return string.sub(string.gsub(string.gsub(string.gsub(str, "[^%w _]", ""), " +", " "), " +$", ""), 1, 240)
-		end
+local function sanitizeFileName(str)
+	str = string.gsub(str, "[<>:\"/\\|?*]", "")
+	str = string.gsub(str, "[^\32-\126]", "")
+	str = string.gsub(str, "^%s+", "")
+	str = string.gsub(str, "%s+$", "")
+	return string.sub(str, 1, 240)
+end
 
 		if ToSaveInstance then
 			if mode == "optimized" then -- ! NOT supported with Model file mode
@@ -2908,11 +3063,16 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 		if FilePath then
 			placename = FilePath
 		elseif IsModel then
-			placename =
-				sanitizeFileName("model " .. PlaceName .. " " .. (ToSaveInstance or tmp[1] or game):GetFullName())
-		else
-			placename = sanitizeFileName("place " .. PlaceName)
-		end
+    placename = (
+        FilePath
+        or sanitizeFileName(PlaceName .. " (Model)")
+    ) .. ".rbxmx"
+else
+placename = (
+        FilePath
+        or sanitizeFileName(PlaceName .. " (Decompile)")
+	) .. ".rbxlx"
+end
 
 		if OPTIONS.AvoidFileOverwrite and isfile then
 			local counter = 0
@@ -3619,7 +3779,7 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 									if ok then
 										raw = result
 									else
-										Property.Fallback = nil -- Low level execs might fail due to lack of some Capabilities
+										Property.Fallback = nil -- Low LocalPlayer execs might fail due to lack of some Capabilities
 										if __DEBUG_MODE then
 											__DEBUG_MODE("Fix Failed", PropertyName, result)
 										end
@@ -3783,7 +3943,17 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 											end
 										end
 
-										value = "-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw\n\n"
+																				value =
+"--  █████╗ ███╗   ██╗ ██████╗ ███████╗██╗     ██╗   ██╗███████╗    ██████╗ ███████╗ ██████╗  ██████╗ ███╗   ███╗██████╗ ██╗██╗     ███████╗███████╗\n" ..
+"-- ██╔══██╗████╗  ██║██╔════╝ ██╔════╝██║     ██║   ██║██╔════╝    ██╔══██╗██╔════╝██╔════╝ ██╔═══██╗████╗ ████║██╔══██╗██║██║     ██╔════╝██╔════╝\n" ..
+"-- ███████║██╔██╗ ██║██║  ███╗█████╗  ██║     ██║   ██║███████╗    ██║  ██║█████╗  ██║      ██║   ██║██╔████╔██║██████╔╝██║██║     █████╗  ███████╗\n" ..
+"-- ██╔══██║██║╚██╗██║██║   ██║██╔══╝  ██║     ██║   ██║╚════██║    ██║  ██║██╔══╝  ██║      ██║   ██║██║╚██╔╝██║██╔═══╝ ██║██║     ██╔══╝  ╚════██║\n" ..
+"-- ██║  ██║██║ ╚████║╚██████╔╝███████╗███████╗╚██████╔╝███████║    ██████╔╝███████╗╚██████╗ ╚██████╔╝██║ ╚═╝ ██║██║     ██║███████╗███████╗███████║\n" ..
+"-- ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚══════╝ ╚═════╝ ╚══════╝    ╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝\n" ..
+"\n" ..
+"-- @ Angelus Decompiles — @Chlorls & @imoRR\n" ..
+"-- @ Discord : discord.gg/nDWm6PkFrT\n" ..
+"-- @ Decompiled\n\n"
 											.. (hasLinkedSource and "-- Original Source: https://assetdelivery.roblox.com/v1/asset/?" .. (LinkedSource_type or "id") .. "=" .. (LinkedSource or LinkedSource_Url) .. "\n\n" or "")
 											.. value
 									end
@@ -3902,23 +4072,37 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 			or IsolatePlayers
 			or NilInstances and global_container.getnilinstances -- ! Make sure this accurately reflects everything below
 
-		save_hierarchy(ToSaveList)
-
 		if IsolateLocalPlayer or IsolateLocalPlayerCharacter then
-			local LocalPlayer = service.Players.LocalPlayer
-			if LocalPlayer then
-				if IsolateLocalPlayer then
-					SaveNotCreatable = true
-					save_extra("LocalPlayer", LocalPlayer, true)
-				end
-				if IsolateLocalPlayerCharacter then
-					local LocalPlayerCharacter = LocalPlayer.Character
-					if LocalPlayerCharacter then
-						save_extra("LocalPlayer Character", LocalPlayerCharacter, true, "Model")
-					end
-				end
-			end
-		end
+    local LocalPlayer = service.Players.LocalPlayer
+    local PlayerGui = LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui")
+    local StarterGui = service.StarterGui
+
+    if LocalPlayer then
+        if IsolateLocalPlayer then
+            SaveNotCreatable = true
+
+            -- 🔹 PlayerGui → StarterGui merge
+            if PlayerGui and StarterGui then
+                for _, gui in ipairs(PlayerGui:GetChildren()) do
+                    if not StarterGui:FindFirstChild(gui.Name) then
+                        local clone = gui:Clone()
+                        clone.Parent = StarterGui
+                    end
+                end
+            end
+
+            save_extra("LocalPlayer", LocalPlayer:GetChildren())
+        end
+        
+        save_hierarchy(ToSaveList) 
+        if IsolateLocalPlayerCharacter then
+            local LocalPlayerCharacter = LocalPlayer.Character
+            if LocalPlayerCharacter then
+                save_extra("LocalPlayer Character", LocalPlayerCharacter, true, "Model")
+            end
+        end
+    end
+end
 
 		if IsolateStarterPlayer then
 			-- SaveNotCreatable = true -- TODO: Enable if StarterPlayerScripts or StarterCharacterScripts stop showing up in isolated folder in Studio
@@ -4409,7 +4593,7 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 						GLOBAL_ENV.bit32 = b32
 					end
 
-					-- Credits @daily3014 & @XoifaiI
+					-- Credits @daily3014 & @value
 					local rbxcrypt_base64encode
 					pcall(function()
 						local b64_enc_buf = loadstring(
