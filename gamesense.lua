@@ -15,8 +15,8 @@ local Passed, Statement = pcall(function()
 	-- [[ // Indexes // ]]
 	do
 		library.__index = library
-		pages.__index = pages
-		sections.__index = sections
+		pages.__index = library
+		sections.__index = library
 	end
 	-- [[ // Variables // ]] 
 	local tws = game:GetService("TweenService")
@@ -2361,13 +2361,12 @@ local Passed, Statement = pcall(function()
 					end)
 				end
 				--
-								Content:Set(Content.State)
+				Content:Set(Content.State)
 			end
 			--
-			return Content   -- CreateColorpicker'ın return'ü
+				return Content   -- CreateColorpicker'ın return'ü
 		end
 	end
 	
-	return library   -- pcall fonksiyonunun return'ü - BUNU EKLE
-end)
--- CreateColorpicker  
+	return library   -- sections  fonksiyonunun return'ü - BUNU EKLE
+end)  -- <-- BU SATIR EKSİK!
