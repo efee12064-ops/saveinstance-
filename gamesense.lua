@@ -1,7 +1,5 @@
 -- [[ // Error Handling // ]]
-local Passed, Statement = pcall(function()
-	-- [[ // Libraries // ]]
-	local library = {
+local library = {
 		Renders = {},
 		Connections = {},
 		Folder = "PuppyWare", -- Change if wanted
@@ -15,8 +13,8 @@ local Passed, Statement = pcall(function()
 	-- [[ // Indexes // ]]
 	do
 		library.__index = library
-		pages.__index = library
-		sections.__index = library
+		pages.__index = pages
+		sections.__index = sections
 	end
 	-- [[ // Variables // ]] 
 	local tws = game:GetService("TweenService")
@@ -2364,9 +2362,6 @@ local Passed, Statement = pcall(function()
 				Content:Set(Content.State)
 			end
 			--
-				return Content   -- CreateColorpicker'ın return'ü
+			return Content
 		end
 	end
-	
-	return library   -- sections  fonksiyonunun return'ü - BUNU EKLE
-end)  -- <-- BU SATIR EKSİK!
