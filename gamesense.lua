@@ -2361,11 +2361,13 @@ local Passed, Statement = pcall(function()
 					end)
 				end
 				--
-				Content:Set(Content.State)
+								Content:Set(Content.State)
 			end
 			--
-			return library
+			return Content   -- CreateColorpicker'ın return'ü
 		end
 	end
+	
+	return library   -- pcall fonksiyonunun return'ü - BUNU EKLE
 end)
---
+-- CreateColorpicker  
