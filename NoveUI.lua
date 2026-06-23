@@ -1,212 +1,235 @@
--- NovaUI.lua
--- Modern, minimalist GUI kütüphanesi
--- Tamamen özgün yapı, Rayfield'dan farklı tasarım felsefesi
+-- ============================================
+-- AI-STYLE NOVAUI - Modern Developer Interface
+-- ============================================
 
-local NovaUI = {
-    Version = "1.0.0",
+local NovaAI = {
+    Version = "3.0.0",
     Theme = {
         Dark = {
-            Background = Color3.fromRGB(18, 18, 24),
-            Surface = Color3.fromRGB(28, 28, 38),
-            SurfaceHover = Color3.fromRGB(38, 38, 52),
-            Primary = Color3.fromRGB(99, 102, 241), -- İndigo
-            PrimaryHover = Color3.fromRGB(129, 140, 248),
-            Text = Color3.fromRGB(226, 232, 240),
-            TextSecondary = Color3.fromRGB(148, 163, 184),
-            Border = Color3.fromRGB(51, 65, 85),
-            Success = Color3.fromRGB(52, 211, 153),
-            Danger = Color3.fromRGB(248, 113, 113),
-            Warning = Color3.fromRGB(251, 191, 36),
-        },
-        Light = {
-            Background = Color3.fromRGB(248, 250, 252),
-            Surface = Color3.fromRGB(255, 255, 255),
-            SurfaceHover = Color3.fromRGB(241, 245, 249),
-            Primary = Color3.fromRGB(99, 102, 241),
-            PrimaryHover = Color3.fromRGB(79, 70, 229),
-            Text = Color3.fromRGB(15, 23, 42),
-            TextSecondary = Color3.fromRGB(71, 85, 105),
-            Border = Color3.fromRGB(203, 213, 225),
-            Success = Color3.fromRGB(16, 185, 129),
-            Danger = Color3.fromRGB(239, 68, 68),
-            Warning = Color3.fromRGB(234, 179, 8),
+            Background = Color3.fromRGB(13, 17, 23),    -- VS Code dark
+            Surface = Color3.fromRGB(22, 27, 34),       -- GitHub dark
+            SurfaceHover = Color3.fromRGB(33, 38, 45),
+            Primary = Color3.fromRGB(88, 166, 255),     -- VS Code blue
+            PrimaryHover = Color3.fromRGB(120, 190, 255),
+            Secondary = Color3.fromRGB(48, 54, 61),
+            Text = Color3.fromRGB(230, 237, 243),
+            TextSecondary = Color3.fromRGB(139, 148, 158),
+            Border = Color3.fromRGB(48, 54, 61),
+            Success = Color3.fromRGB(46, 160, 67),
+            Danger = Color3.fromRGB(248, 81, 73),
+            Warning = Color3.fromRGB(218, 165, 32),
+            Terminal = Color3.fromRGB(0, 0, 0),
+            Code = Color3.fromRGB(30, 30, 40),
         }
     },
     Windows = {},
-    Notifications = {},
-    CurrentTheme = nil,
+    Panels = {},
 }
 
 -- Services
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local TS = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
-local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
+local RS = game:GetService("RunService")
 
--- Yardımcı fonksiyonlar
-local function getService(name)
-    local service = game:GetService(name)
-    return if cloneref then cloneref(service) else service
-end
-
+-- UI Oluşturucu
 local function createUI()
-    -- Ana UI container
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "NovaUI"
-    screenGui.ResetOnSpawn = false
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "NovaAI"
+    sg.ResetOnSpawn = false
+    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
-    if gethui then
-        screenGui.Parent = gethui()
-    elseif syn and syn.protect_gui then
-        syn.protect_gui(screenGui)
-        screenGui.Parent = CoreGui
+    local plr = Players.LocalPlayer
+    if plr and plr:FindFirstChild("PlayerGui") then
+        sg.Parent = plr.PlayerGui
     else
-        screenGui.Parent = CoreGui
+        sg.Parent = CoreGui
     end
-    
-    return screenGui
+    return sg
 end
 
 -- ============================================
--- Ana Pencere (Window) Sınıfı
+-- ANA PENCERE (VS Code Tarzı)
 -- ============================================
 local WindowClass = {}
 WindowClass.__index = WindowClass
 
-function NovaUI:CreateWindow(config)
+function NovaAI:CreateWindow(config)
     config = config or {}
-    local theme = config.Theme and NovaUI.Theme[config.Theme] or NovaUI.Theme.Dark
+    local theme = NovaAI.Theme.Dark
+    local sg = createUI()
     
-    -- Ana container
-    local screenGui = createUI()
+    -- Ana Pencere
     local window = Instance.new("Frame")
-    window.Name = config.Title or "NovaUI"
-    window.Size = UDim2.new(0, 600, 0, 450)
-    window.Position = UDim2.new(0.5, -300, 0.5, -225)
+    window.Name = config.Title or "NovaAI"
+    window.Size = UDim2.new(0, 900, 0, 600)
+    window.Position = UDim2.new(0.5, -450, 0.5, -300)
     window.BackgroundColor3 = theme.Background
-    window.BackgroundTransparency = 0
     window.BorderSizePixel = 0
-    window.Parent = screenGui
+    window.Parent = sg
     window.ClipsDescendants = true
     
-    -- Gölge efekti
-    local shadow = Instance.new("ImageLabel")
-    shadow.Name = "Shadow"
-    shadow.Size = UDim2.new(1, 20, 1, 20)
-    shadow.Position = UDim2.new(0.5, -10, 0.5, -10)
-    shadow.BackgroundTransparency = 1
-    shadow.Image = "rbxassetid://1316041501" -- Soft shadow
-    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    shadow.ImageTransparency = 0.7
-    shadow.ScaleType = Enum.ScaleType.Slice
-    shadow.SliceCenter = Rect.new(10, 10, 10, 10)
-    shadow.Parent = window
-    
-    -- Yuvarlak köşeler
+    -- Yuvarlak Köşeler
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = window
     
-    -- Başlık çubuğu (drag için)
+    -- ==========================================
+    -- TITLE BAR (VS Code Tarzı)
+    -- ==========================================
     local titleBar = Instance.new("Frame")
-    titleBar.Name = "TitleBar"
-    titleBar.Size = UDim2.new(1, 0, 0, 48)
+    titleBar.Size = UDim2.new(1, 0, 0, 36)
     titleBar.BackgroundColor3 = theme.Surface
-    titleBar.BackgroundTransparency = 0
     titleBar.BorderSizePixel = 0
     titleBar.Parent = window
     
     local titleCorner = Instance.new("UICorner")
-    titleCorner.CornerRadius = UDim.new(0, 12)
+    titleCorner.CornerRadius = UDim.new(0, 10)
     titleCorner.Parent = titleBar
     
-    -- Başlık metni
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, -100, 1, 0)
-    titleLabel.Position = UDim2.new(0, 16, 0, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = config.Title or "NovaUI"
-    titleLabel.TextColor3 = theme.Text
-    titleLabel.TextSize = 18
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Font = Enum.Font.GothamSemibold
-    titleLabel.Parent = titleBar
+    -- Başlık
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -120, 1, 0)
+    title.Position = UDim2.new(0, 12, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = config.Title or "NovaAI Terminal"
+    title.TextColor3 = theme.Text
+    title.TextSize = 14
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Font = Enum.Font.GothamSemibold
+    title.Parent = titleBar
     
-    -- Kapatma butonu
-    local closeBtn = Instance.new("ImageButton")
-    closeBtn.Name = "CloseBtn"
-    closeBtn.Size = UDim2.new(0, 32, 0, 32)
-    closeBtn.Position = UDim2.new(1, -42, 0.5, -16)
-    closeBtn.BackgroundTransparency = 1
-    closeBtn.Image = "rbxassetid://7072718814" -- X icon
-    closeBtn.ImageColor3 = theme.TextSecondary
-    closeBtn.Parent = titleBar
+    -- VS Code Tarzı Butonlar (Sola)
+    local buttons = {"Close", "Minimize", "Maximize"}
+    local btnColors = {
+        Close = Color3.fromRGB(237, 66, 69),
+        Minimize = Color3.fromRGB(251, 189, 8),
+        Maximize = Color3.fromRGB(46, 160, 67)
+    }
     
-    closeBtn.MouseEnter:Connect(function()
-        TweenService:Create(closeBtn, TweenInfo.new(0.2), {ImageColor3 = theme.Danger}):Play()
-    end)
-    closeBtn.MouseLeave:Connect(function()
-        TweenService:Create(closeBtn, TweenInfo.new(0.2), {ImageColor3 = theme.TextSecondary}):Play()
-    end)
+    local btnX = 12
+    for _, name in ipairs(buttons) do
+        local btn = Instance.new("Frame")
+        btn.Size = UDim2.new(0, 14, 0, 14)
+        btn.Position = UDim2.new(0, btnX, 0.5, -7)
+        btn.BackgroundColor3 = btnColors[name]
+        btn.BackgroundTransparency = 0.3
+        btn.BorderSizePixel = 0
+        btn.Parent = titleBar
+        
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(1, 0)
+        btnCorner.Parent = btn
+        
+        btn.MouseEnter:Connect(function()
+            TS:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            TS:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.3}):Play()
+        end)
+        
+        if name == "Close" then
+            btn.MouseButton1Click:Connect(function()
+                sg:Destroy()
+            end)
+        end
+        
+        btnX = btnX + 20
+    end
     
-    -- İçerik alanı
-    local content = Instance.new("Frame")
-    content.Name = "Content"
-    content.Size = UDim2.new(1, 0, 1, -48)
-    content.Position = UDim2.new(0, 0, 0, 48)
-    content.BackgroundTransparency = 1
-    content.Parent = window
-    
-    -- Sol sidebar (tab'ler için)
+    -- ==========================================
+    -- SIDEBAR (VS Code Tarzı)
+    -- ==========================================
     local sidebar = Instance.new("Frame")
-    sidebar.Name = "Sidebar"
-    sidebar.Size = UDim2.new(0, 160, 1, 0)
+    sidebar.Size = UDim2.new(0, 220, 1, -36)
+    sidebar.Position = UDim2.new(0, 0, 0, 36)
     sidebar.BackgroundColor3 = theme.Surface
-    sidebar.BackgroundTransparency = 0
     sidebar.BorderSizePixel = 0
-    sidebar.Parent = content
+    sidebar.Parent = window
     
-    local sidebarCorner = Instance.new("UICorner")
-    sidebarCorner.CornerRadius = UDim.new(0, 0)
-    sidebarCorner.Parent = sidebar
+    -- Sidebar başlığı
+    local sidebarTitle = Instance.new("TextLabel")
+    sidebarTitle.Size = UDim2.new(1, -24, 0, 28)
+    sidebarTitle.Position = UDim2.new(0, 12, 0, 8)
+    sidebarTitle.BackgroundTransparency = 1
+    sidebarTitle.Text = "EXPLORER"
+    sidebarTitle.TextColor3 = theme.TextSecondary
+    sidebarTitle.TextSize = 11
+    sidebarTitle.TextXAlignment = Enum.TextXAlignment.Left
+    sidebarTitle.Font = Enum.Font.GothamBold
+    sidebarTitle.Parent = sidebar
     
-    -- Sidebar'daki tab listesi
+    -- Tab Listesi (Explorer)
     local tabList = Instance.new("ScrollingFrame")
-    tabList.Name = "TabList"
-    tabList.Size = UDim2.new(1, 0, 1, 0)
+    tabList.Size = UDim2.new(1, 0, 1, -40)
+    tabList.Position = UDim2.new(0, 0, 0, 36)
     tabList.BackgroundTransparency = 1
     tabList.BorderSizePixel = 0
-    tabList.ScrollBarThickness = 3
+    tabList.ScrollBarThickness = 2
     tabList.Parent = sidebar
     
-    local tabListLayout = Instance.new("UIListLayout")
-    tabListLayout.Padding = UDim.new(0, 4)
-    tabListLayout.Parent = tabList
+    local tabLayout = Instance.new("UIListLayout")
+    tabLayout.Padding = UDim.new(0, 2)
+    tabLayout.Parent = tabList
     
-    -- Sağ içerik alanı
-    local contentArea = Instance.new("Frame")
-    contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, -160, 1, 0)
-    contentArea.Position = UDim2.new(0, 160, 0, 0)
+    -- ==========================================
+    -- CONTENT AREA (Ana Çalışma Alanı)
+    -- ==========================================
+    local contentArea = Instance.new("ScrollingFrame")
+    contentArea.Size = UDim2.new(1, -236, 1, -48)
+    contentArea.Position = UDim2.new(0, 228, 0, 40)
     contentArea.BackgroundTransparency = 1
-    contentArea.Parent = content
+    contentArea.BorderSizePixel = 0
+    contentArea.ScrollBarThickness = 4
+    contentArea.Parent = window
     
-    -- Window objesi
+    local contentLayout = Instance.new("UIListLayout")
+    contentLayout.Padding = UDim.new(0, 6)
+    contentLayout.Parent = contentArea
+    
+    -- ==========================================
+    -- STATUS BAR (Bottom)
+    -- ==========================================
+    local statusBar = Instance.new("Frame")
+    statusBar.Size = UDim2.new(1, 0, 0, 24)
+    statusBar.Position = UDim2.new(0, 0, 1, -24)
+    statusBar.BackgroundColor3 = theme.Surface
+    statusBar.BorderSizePixel = 0
+    statusBar.Parent = window
+    
+    local statusCorner = Instance.new("UICorner")
+    statusCorner.CornerRadius = UDim.new(0, 10)
+    statusCorner.Parent = statusBar
+    
+    -- Status metni
+    local statusText = Instance.new("TextLabel")
+    statusText.Size = UDim2.new(1, -24, 1, 0)
+    statusText.Position = UDim2.new(0, 12, 0, 0)
+    statusText.BackgroundTransparency = 1
+    statusText.Text = "● Ready | NovaAI v3.0 | " .. game.PlaceId
+    statusText.TextColor3 = theme.TextSecondary
+    statusText.TextSize = 11
+    statusText.TextXAlignment = Enum.TextXAlignment.Left
+    statusText.Font = Enum.Font.Gotham
+    statusText.Parent = statusBar
+    
+    -- ==========================================
+    -- WINDOW OBJECT
+    -- ==========================================
     local self = setmetatable({
-        _screenGui = screenGui,
+        _sg = sg,
         _window = window,
         _contentArea = contentArea,
         _tabList = tabList,
         _tabs = {},
         _currentTab = nil,
         _theme = theme,
+        _statusBar = statusText,
         _config = config,
     }, WindowClass)
     
-    -- Sürükleme fonksiyonu
+    -- Drag fonksiyonu
     local function makeDraggable()
         local dragging = false
         local dragOffset = Vector2.new()
@@ -218,160 +241,155 @@ function NovaUI:CreateWindow(config)
             end
         end)
         
-        UserInputService.InputEnded:Connect(function(input)
+        UIS.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 dragging = false
             end
         end)
         
-        RunService.RenderStepped:Connect(function()
+        RS.RenderStepped:Connect(function()
             if dragging then
-                local mousePos = UserInputService:GetMouseLocation()
+                local mousePos = UIS:GetMouseLocation()
                 window.Position = UDim2.fromOffset(mousePos.X - dragOffset.X, mousePos.Y - dragOffset.Y)
             end
         end)
     end
     makeDraggable()
     
-    -- Kapatma
-    closeBtn.MouseButton1Click:Connect(function()
-        screenGui:Destroy()
-    end)
-    
-    -- Tab oluşturma
+    -- ==========================================
+    -- TAB OLUŞTURMA (VS Code Explorer Tarzı)
+    -- ==========================================
     function self:CreateTab(name, icon)
+        -- Explorer'da görünen buton
         local tabBtn = Instance.new("TextButton")
         tabBtn.Name = name
-        tabBtn.Size = UDim2.new(1, -12, 0, 36)
+        tabBtn.Size = UDim2.new(1, -12, 0, 32)
         tabBtn.Position = UDim2.new(0, 6, 0, 0)
         tabBtn.BackgroundColor3 = theme.Background
-        tabBtn.BackgroundTransparency = 0.8
+        tabBtn.BackgroundTransparency = 0.7
         tabBtn.BorderSizePixel = 0
-        tabBtn.Text = "  " .. name
+        tabBtn.Text = "  " .. (icon or "📁") .. "  " .. name
         tabBtn.TextColor3 = theme.TextSecondary
-        tabBtn.TextSize = 14
+        tabBtn.TextSize = 13
         tabBtn.TextXAlignment = Enum.TextXAlignment.Left
         tabBtn.Font = Enum.Font.Gotham
         tabBtn.Parent = tabList
         
         local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 6)
+        btnCorner.CornerRadius = UDim.new(0, 4)
         btnCorner.Parent = tabBtn
         
-        -- Tab içeriği
-        local tabContent = Instance.new("ScrollingFrame")
+        -- Tab içeriği (ScrollingFrame)
+        local tabContent = Instance.new("Frame")
         tabContent.Name = name .. "Content"
-        tabContent.Size = UDim2.new(1, -24, 1, 0)
-        tabContent.Position = UDim2.new(0, 12, 0, 8)
+        tabContent.Size = UDim2.new(1, 0, 0, 0)
         tabContent.BackgroundTransparency = 1
-        tabContent.BorderSizePixel = 0
-        tabContent.ScrollBarThickness = 4
         tabContent.Visible = false
         tabContent.Parent = contentArea
         
-        local contentLayout = Instance.new("UIListLayout")
-        contentLayout.Padding = UDim.new(0, 8)
-        contentLayout.Parent = tabContent
+        local tabContentLayout = Instance.new("UIListLayout")
+        tabContentLayout.Padding = UDim.new(0, 6)
+        tabContentLayout.Parent = tabContent
         
-        -- Tab objesi
-        local tabObj = {
-            _button = tabBtn,
-            _content = tabContent,
-            _elements = {},
-            _name = name,
-        }
-        
-        -- Tab seçme
-        tabBtn.MouseButton1Click:Connect(function()
-            self:SelectTab(name)
-        end)
-        
-        -- Hover efektleri
-        tabBtn.MouseEnter:Connect(function()
-            if self._currentTab ~= name then
-                TweenService:Create(tabBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.6}):Play()
-            end
-        end)
-        tabBtn.MouseLeave:Connect(function()
-            if self._currentTab ~= name then
-                TweenService:Create(tabBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.8}):Play()
-            end
-        end)
-        
-        self._tabs[name] = tabObj
-        
-        -- İlk tab'ı seç
-        if not self._currentTab then
-            self:SelectTab(name)
+        -- Section ekleme fonksiyonu
+        function tabContent:CreateSection(title)
+            local section = Instance.new("Frame")
+            section.Size = UDim2.new(1, -12, 0, 28)
+            section.Position = UDim2.new(0, 6, 0, 0)
+            section.BackgroundTransparency = 1
+            section.Parent = tabContent
+            
+            local line = Instance.new("Frame")
+            line.Size = UDim2.new(1, 0, 0, 1)
+            line.Position = UDim2.new(0, 0, 1, -1)
+            line.BackgroundColor3 = theme.Border
+            line.BackgroundTransparency = 0.5
+            line.Parent = section
+            
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = "// " .. title
+            label.TextColor3 = theme.TextSecondary
+            label.TextSize = 11
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Font = Enum.Font.GothamBold
+            label.Parent = section
+            
+            return {
+                AddElement = function(self, element)
+                    element.Parent = tabContent
+                end
+            }
         end
         
         -- Element ekleme fonksiyonları
-        function tabObj:CreateButton(config)
+        function tabContent:CreateButton(config)
             local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, 0, 0, 40)
+            btn.Size = UDim2.new(1, -12, 0, 36)
+            btn.Position = UDim2.new(0, 6, 0, 0)
             btn.BackgroundColor3 = theme.Surface
             btn.BackgroundTransparency = 0
             btn.BorderSizePixel = 0
-            btn.Text = config.Text or "Button"
+            btn.Text = "  " .. (config.Icon or "▶") .. "  " .. (config.Text or "Button")
             btn.TextColor3 = theme.Text
-            btn.TextSize = 14
+            btn.TextSize = 13
+            btn.TextXAlignment = Enum.TextXAlignment.Left
             btn.Font = Enum.Font.Gotham
             btn.Parent = tabContent
             
             local btnCorner = Instance.new("UICorner")
-            btnCorner.CornerRadius = UDim.new(0, 8)
+            btnCorner.CornerRadius = UDim.new(0, 6)
             btnCorner.Parent = btn
             
             btn.MouseEnter:Connect(function()
-                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = theme.SurfaceHover}):Play()
+                TS:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = theme.SurfaceHover}):Play()
             end)
             btn.MouseLeave:Connect(function()
-                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = theme.Surface}):Play()
+                TS:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = theme.Surface}):Play()
             end)
             
             btn.MouseButton1Click:Connect(function()
                 if config.Callback then
                     pcall(config.Callback)
                 end
-                -- Click animasyonu
-                TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = theme.Primary}):Play()
-                task.wait(0.1)
-                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = theme.Surface}):Play()
+                -- Click efekti
+                TS:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = theme.Primary}):Play()
+                task.wait(0.08)
+                TS:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = theme.Surface}):Play()
             end)
             
             return btn
         end
         
-        function tabObj:CreateToggle(config)
+        function tabContent:CreateToggle(config)
             local container = Instance.new("Frame")
-            container.Size = UDim2.new(1, 0, 0, 40)
+            container.Size = UDim2.new(1, -12, 0, 36)
+            container.Position = UDim2.new(0, 6, 0, 0)
             container.BackgroundColor3 = theme.Surface
-            container.BackgroundTransparency = 0
             container.BorderSizePixel = 0
             container.Parent = tabContent
             
             local containerCorner = Instance.new("UICorner")
-            containerCorner.CornerRadius = UDim.new(0, 8)
+            containerCorner.CornerRadius = UDim.new(0, 6)
             containerCorner.Parent = container
             
-            -- Label
             local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, -70, 1, 0)
+            label.Size = UDim2.new(1, -60, 1, 0)
             label.Position = UDim2.new(0, 12, 0, 0)
             label.BackgroundTransparency = 1
-            label.Text = config.Text or "Toggle"
+            label.Text = "  " .. (config.Icon or "⬡") .. "  " .. (config.Text or "Toggle")
             label.TextColor3 = theme.Text
-            label.TextSize = 14
+            label.TextSize = 13
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.Font = Enum.Font.Gotham
             label.Parent = container
             
-            -- Toggle switch
+            -- Switch
             local switch = Instance.new("Frame")
-            switch.Size = UDim2.new(0, 44, 0, 24)
-            switch.Position = UDim2.new(1, -56, 0.5, -12)
+            switch.Size = UDim2.new(0, 36, 0, 20)
+            switch.Position = UDim2.new(1, -48, 0.5, -10)
             switch.BackgroundColor3 = theme.Border
-            switch.BackgroundTransparency = 0
             switch.BorderSizePixel = 0
             switch.Parent = container
             
@@ -379,12 +397,10 @@ function NovaUI:CreateWindow(config)
             switchCorner.CornerRadius = UDim.new(1, 0)
             switchCorner.Parent = switch
             
-            -- Toggle thumb
             local thumb = Instance.new("Frame")
-            thumb.Size = UDim2.new(0, 18, 0, 18)
-            thumb.Position = UDim2.new(0, 3, 0.5, -9)
+            thumb.Size = UDim2.new(0, 14, 0, 14)
+            thumb.Position = UDim2.new(0, 3, 0.5, -7)
             thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            thumb.BackgroundTransparency = 0
             thumb.BorderSizePixel = 0
             thumb.Parent = switch
             
@@ -395,18 +411,17 @@ function NovaUI:CreateWindow(config)
             local state = config.Default or false
             if state then
                 switch.BackgroundColor3 = theme.Primary
-                thumb.Position = UDim2.new(0, 23, 0.5, -9)
+                thumb.Position = UDim2.new(0, 19, 0.5, -7)
             end
             
-            -- Click handler
             local function toggle()
                 state = not state
                 if state then
-                    TweenService:Create(switch, TweenInfo.new(0.3), {BackgroundColor3 = theme.Primary}):Play()
-                    TweenService:Create(thumb, TweenInfo.new(0.3), {Position = UDim2.new(0, 23, 0.5, -9)}):Play()
+                    TS:Create(switch, TweenInfo.new(0.25), {BackgroundColor3 = theme.Primary}):Play()
+                    TS:Create(thumb, TweenInfo.new(0.25), {Position = UDim2.new(0, 19, 0.5, -7)}):Play()
                 else
-                    TweenService:Create(switch, TweenInfo.new(0.3), {BackgroundColor3 = theme.Border}):Play()
-                    TweenService:Create(thumb, TweenInfo.new(0.3), {Position = UDim2.new(0, 3, 0.5, -9)}):Play()
+                    TS:Create(switch, TweenInfo.new(0.25), {BackgroundColor3 = theme.Border}):Play()
+                    TS:Create(thumb, TweenInfo.new(0.25), {Position = UDim2.new(0, 3, 0.5, -7)}):Play()
                 end
                 if config.Callback then
                     pcall(config.Callback, state)
@@ -421,61 +436,49 @@ function NovaUI:CreateWindow(config)
             btn.MouseButton1Click:Connect(toggle)
             
             return {
-                Set = function(self, newState)
-                    state = newState
-                    if state then
-                        switch.BackgroundColor3 = theme.Primary
-                        thumb.Position = UDim2.new(0, 23, 0.5, -9)
-                    else
-                        switch.BackgroundColor3 = theme.Border
-                        thumb.Position = UDim2.new(0, 3, 0.5, -9)
-                    end
-                end,
+                Set = function(_, s) state = s; if s then switch.BackgroundColor3 = theme.Primary thumb.Position = UDim2.new(0, 19, 0.5, -7) else switch.BackgroundColor3 = theme.Border thumb.Position = UDim2.new(0, 3, 0.5, -7) end end,
                 Get = function() return state end
             }
         end
         
-        function tabObj:CreateSlider(config)
+        function tabContent:CreateSlider(config)
             local container = Instance.new("Frame")
-            container.Size = UDim2.new(1, 0, 0, 56)
+            container.Size = UDim2.new(1, -12, 0, 48)
+            container.Position = UDim2.new(0, 6, 0, 0)
             container.BackgroundColor3 = theme.Surface
-            container.BackgroundTransparency = 0
             container.BorderSizePixel = 0
             container.Parent = tabContent
             
             local containerCorner = Instance.new("UICorner")
-            containerCorner.CornerRadius = UDim.new(0, 8)
+            containerCorner.CornerRadius = UDim.new(0, 6)
             containerCorner.Parent = container
             
-            -- Label ve değer
             local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0.7, -12, 0, 20)
-            label.Position = UDim2.new(0, 12, 0, 8)
+            label.Size = UDim2.new(0.6, -12, 0, 20)
+            label.Position = UDim2.new(0, 12, 0, 6)
             label.BackgroundTransparency = 1
-            label.Text = config.Text or "Slider"
+            label.Text = "  " .. (config.Icon or "▬") .. "  " .. (config.Text or "Slider")
             label.TextColor3 = theme.Text
-            label.TextSize = 14
+            label.TextSize = 13
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.Font = Enum.Font.Gotham
             label.Parent = container
             
             local valueLabel = Instance.new("TextLabel")
-            valueLabel.Size = UDim2.new(0.3, -12, 0, 20)
-            valueLabel.Position = UDim2.new(0.7, 0, 0, 8)
+            valueLabel.Size = UDim2.new(0.4, -12, 0, 20)
+            valueLabel.Position = UDim2.new(0.6, 0, 0, 6)
             valueLabel.BackgroundTransparency = 1
             valueLabel.Text = tostring(config.Default or 50)
             valueLabel.TextColor3 = theme.Primary
-            valueLabel.TextSize = 14
+            valueLabel.TextSize = 13
             valueLabel.TextXAlignment = Enum.TextXAlignment.Right
             valueLabel.Font = Enum.Font.GothamBold
             valueLabel.Parent = container
             
-            -- Slider track
             local track = Instance.new("Frame")
             track.Size = UDim2.new(1, -24, 0, 4)
-            track.Position = UDim2.new(0, 12, 0, 38)
+            track.Position = UDim2.new(0, 12, 0, 34)
             track.BackgroundColor3 = theme.Border
-            track.BackgroundTransparency = 0
             track.BorderSizePixel = 0
             track.Parent = container
             
@@ -483,11 +486,9 @@ function NovaUI:CreateWindow(config)
             trackCorner.CornerRadius = UDim.new(1, 0)
             trackCorner.Parent = track
             
-            -- Slider fill
             local fill = Instance.new("Frame")
             fill.Size = UDim2.new(0.5, 0, 1, 0)
             fill.BackgroundColor3 = theme.Primary
-            fill.BackgroundTransparency = 0
             fill.BorderSizePixel = 0
             fill.Parent = track
             
@@ -495,12 +496,10 @@ function NovaUI:CreateWindow(config)
             fillCorner.CornerRadius = UDim.new(1, 0)
             fillCorner.Parent = fill
             
-            -- Slider thumb
             local thumb = Instance.new("Frame")
-            thumb.Size = UDim2.new(0, 16, 0, 16)
-            thumb.Position = UDim2.new(0.5, -8, 0.5, -8)
+            thumb.Size = UDim2.new(0, 14, 0, 14)
+            thumb.Position = UDim2.new(0.5, -7, 0.5, -7)
             thumb.BackgroundColor3 = theme.Primary
-            thumb.BackgroundTransparency = 0
             thumb.BorderSizePixel = 0
             thumb.Parent = track
             
@@ -508,8 +507,7 @@ function NovaUI:CreateWindow(config)
             thumbCorner.CornerRadius = UDim.new(1, 0)
             thumbCorner.Parent = thumb
             
-            local min = config.Min or 0
-            local max = config.Max or 100
+            local min, max = config.Min or 0, config.Max or 100
             local value = config.Default or 50
             local dragging = false
             
@@ -517,34 +515,30 @@ function NovaUI:CreateWindow(config)
                 value = math.clamp(newValue, min, max)
                 local percent = (value - min) / (max - min)
                 fill.Size = UDim2.new(percent, 0, 1, 0)
-                thumb.Position = UDim2.new(percent, -8, 0.5, -8)
+                thumb.Position = UDim2.new(percent, -7, 0.5, -7)
                 valueLabel.Text = tostring(value)
                 if config.Callback then
                     pcall(config.Callback, value)
                 end
             end
-            
             updateSlider(value)
             
-            -- Mouse events
             track.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     dragging = true
                     local localX = math.clamp(input.Position.X - track.AbsolutePosition.X, 0, track.AbsoluteSize.X)
-                    local percent = localX / track.AbsoluteSize.X
-                    updateSlider(min + percent * (max - min))
+                    updateSlider(min + (localX / track.AbsoluteSize.X) * (max - min))
                 end
             end)
             
-            UserInputService.InputChanged:Connect(function(input)
+            UIS.InputChanged:Connect(function(input)
                 if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
                     local localX = math.clamp(input.Position.X - track.AbsolutePosition.X, 0, track.AbsoluteSize.X)
-                    local percent = localX / track.AbsoluteSize.X
-                    updateSlider(min + percent * (max - min))
+                    updateSlider(min + (localX / track.AbsoluteSize.X) * (max - min))
                 end
             end)
             
-            UserInputService.InputEnded:Connect(function(input)
+            UIS.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     dragging = false
                 end
@@ -556,64 +550,51 @@ function NovaUI:CreateWindow(config)
             }
         end
         
-        function tabObj:CreateDropdown(config)
+        function tabContent:CreateDropdown(config)
             local container = Instance.new("Frame")
-            container.Size = UDim2.new(1, 0, 0, 40)
+            container.Size = UDim2.new(1, -12, 0, 36)
+            container.Position = UDim2.new(0, 6, 0, 0)
             container.BackgroundColor3 = theme.Surface
-            container.BackgroundTransparency = 0
             container.BorderSizePixel = 0
             container.Parent = tabContent
             
             local containerCorner = Instance.new("UICorner")
-            containerCorner.CornerRadius = UDim.new(0, 8)
+            containerCorner.CornerRadius = UDim.new(0, 6)
             containerCorner.Parent = container
             
-            -- Label
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(0.5, -12, 1, 0)
             label.Position = UDim2.new(0, 12, 0, 0)
             label.BackgroundTransparency = 1
-            label.Text = config.Text or "Dropdown"
+            label.Text = "  " .. (config.Icon or "▼") .. "  " .. (config.Text or "Dropdown")
             label.TextColor3 = theme.Text
-            label.TextSize = 14
+            label.TextSize = 13
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.Font = Enum.Font.Gotham
             label.Parent = container
             
-            -- Seçili değer
             local selectedLabel = Instance.new("TextLabel")
             selectedLabel.Size = UDim2.new(0.4, -12, 1, 0)
             selectedLabel.Position = UDim2.new(0.5, 0, 0, 0)
             selectedLabel.BackgroundTransparency = 1
             selectedLabel.Text = config.Default or "Select..."
-            selectedLabel.TextColor3 = theme.TextSecondary
-            selectedLabel.TextSize = 14
+            selectedLabel.TextColor3 = theme.Primary
+            selectedLabel.TextSize = 13
             selectedLabel.TextXAlignment = Enum.TextXAlignment.Right
             selectedLabel.Font = Enum.Font.Gotham
             selectedLabel.Parent = container
             
-            -- Dropdown arrow
-            local arrow = Instance.new("ImageLabel")
-            arrow.Size = UDim2.new(0, 16, 0, 16)
-            arrow.Position = UDim2.new(1, -28, 0.5, -8)
-            arrow.BackgroundTransparency = 1
-            arrow.Image = "rbxassetid://6031090475" -- Chevron down
-            arrow.ImageColor3 = theme.TextSecondary
-            arrow.Parent = container
-            
-            -- Dropdown list (gizli)
             local listFrame = Instance.new("Frame")
-            listFrame.Size = UDim2.new(1, 0, 0, 120)
-            listFrame.Position = UDim2.new(0, 0, 0, 40)
+            listFrame.Size = UDim2.new(1, 0, 0, 0)
+            listFrame.Position = UDim2.new(0, 0, 0, 36)
             listFrame.BackgroundColor3 = theme.Surface
-            listFrame.BackgroundTransparency = 0
             listFrame.BorderSizePixel = 0
             listFrame.Visible = false
             listFrame.ClipsDescendants = true
             listFrame.Parent = container
             
             local listCorner = Instance.new("UICorner")
-            listCorner.CornerRadius = UDim.new(0, 8)
+            listCorner.CornerRadius = UDim.new(0, 6)
             listCorner.Parent = listFrame
             
             local listLayout = Instance.new("UIListLayout")
@@ -621,20 +602,49 @@ function NovaUI:CreateWindow(config)
             listLayout.Parent = listFrame
             
             local isOpen = false
+            local options = config.Options or {}
+            local selected = config.Default
+            
+            for _, option in ipairs(options) do
+                local optBtn = Instance.new("TextButton")
+                optBtn.Size = UDim2.new(1, 0, 0, 28)
+                optBtn.BackgroundColor3 = theme.Surface
+                optBtn.BackgroundTransparency = 0.5
+                optBtn.BorderSizePixel = 0
+                optBtn.Text = "  " .. option
+                optBtn.TextColor3 = option == selected and theme.Primary or theme.TextSecondary
+                optBtn.TextSize = 12
+                optBtn.TextXAlignment = Enum.TextXAlignment.Left
+                optBtn.Font = Enum.Font.Gotham
+                optBtn.Parent = listFrame
+                
+                optBtn.MouseButton1Click:Connect(function()
+                    selected = option
+                    selectedLabel.Text = option
+                    for _, child in ipairs(listFrame:GetChildren()) do
+                        if child:IsA("TextButton") then
+                            child.TextColor3 = child.Text == "  " .. option and theme.Primary or theme.TextSecondary
+                        end
+                    end
+                    if config.Callback then
+                        pcall(config.Callback, option)
+                    end
+                    toggleDropdown()
+                end)
+            end
             
             local function toggleDropdown()
                 isOpen = not isOpen
                 listFrame.Visible = isOpen
                 if isOpen then
-                    TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = 180}):Play()
-                    container.Size = UDim2.new(1, 0, 0, 160)
+                    container.Size = UDim2.new(1, -12, 0, 36 + #options * 30)
+                    listFrame.Size = UDim2.new(1, 0, 0, #options * 30)
                 else
-                    TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = 0}):Play()
-                    container.Size = UDim2.new(1, 0, 0, 40)
+                    container.Size = UDim2.new(1, -12, 0, 36)
+                    listFrame.Size = UDim2.new(1, 0, 0, 0)
                 end
             end
             
-            -- Dropdown butonu
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(1, 0, 1, 0)
             btn.BackgroundTransparency = 1
@@ -642,106 +652,56 @@ function NovaUI:CreateWindow(config)
             btn.Parent = container
             btn.MouseButton1Click:Connect(toggleDropdown)
             
-            -- Seçenekleri ekle
-            local options = config.Options or {}
-            local selected = config.Default
-            
-            for _, option in ipairs(options) do
-                local optBtn = Instance.new("TextButton")
-                optBtn.Size = UDim2.new(1, 0, 0, 32)
-                optBtn.BackgroundColor3 = theme.Surface
-                optBtn.BackgroundTransparency = 0.5
-                optBtn.BorderSizePixel = 0
-                optBtn.Text = option
-                optBtn.TextColor3 = theme.TextSecondary
-                optBtn.TextSize = 13
-                optBtn.Font = Enum.Font.Gotham
-                optBtn.Parent = listFrame
-                
-                if option == selected then
-                    optBtn.TextColor3 = theme.Primary
-                end
-                
-                optBtn.MouseButton1Click:Connect(function()
-                    selected = option
-                    selectedLabel.Text = option
-                    selectedLabel.TextColor3 = theme.Primary
-                    
-                    for _, child in ipairs(listFrame:GetChildren()) do
-                        if child:IsA("TextButton") then
-                            child.TextColor3 = theme.TextSecondary
-                        end
-                    end
-                    optBtn.TextColor3 = theme.Primary
-                    
-                    if config.Callback then
-                        pcall(config.Callback, option)
-                    end
-                    
-                    toggleDropdown()
-                end)
-            end
-            
             return {
-                Set = function(self, newOption)
-                    selected = newOption
-                    selectedLabel.Text = newOption
-                    for _, child in ipairs(listFrame:GetChildren()) do
-                        if child:IsA("TextButton") then
-                            child.TextColor3 = child.Text == newOption and theme.Primary or theme.TextSecondary
-                        end
-                    end
-                end,
+                Set = function(_, opt) selected = opt; selectedLabel.Text = opt end,
                 Get = function() return selected end
             }
         end
         
-        function tabObj:CreateTextbox(config)
+        function tabContent:CreateInput(config)
             local container = Instance.new("Frame")
-            container.Size = UDim2.new(1, 0, 0, 56)
+            container.Size = UDim2.new(1, -12, 0, 48)
+            container.Position = UDim2.new(0, 6, 0, 0)
             container.BackgroundColor3 = theme.Surface
-            container.BackgroundTransparency = 0
             container.BorderSizePixel = 0
             container.Parent = tabContent
             
             local containerCorner = Instance.new("UICorner")
-            containerCorner.CornerRadius = UDim.new(0, 8)
+            containerCorner.CornerRadius = UDim.new(0, 6)
             containerCorner.Parent = container
             
-            -- Label
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(1, -12, 0, 20)
-            label.Position = UDim2.new(0, 12, 0, 6)
+            label.Position = UDim2.new(0, 12, 0, 4)
             label.BackgroundTransparency = 1
-            label.Text = config.Text or "Text Input"
+            label.Text = "  " .. (config.Icon or "⌨") .. "  " .. (config.Text or "Input")
             label.TextColor3 = theme.Text
-            label.TextSize = 13
+            label.TextSize = 12
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.Font = Enum.Font.Gotham
             label.Parent = container
             
-            -- Input box
             local input = Instance.new("TextBox")
-            input.Size = UDim2.new(1, -24, 0, 28)
-            input.Position = UDim2.new(0, 12, 0, 24)
-            input.BackgroundColor3 = theme.Background
+            input.Size = UDim2.new(1, -24, 0, 26)
+            input.Position = UDim2.new(0, 12, 0, 22)
+            input.BackgroundColor3 = theme.Code
             input.BackgroundTransparency = 0
             input.BorderSizePixel = 0
             input.Text = config.Default or ""
             input.TextColor3 = theme.Text
-            input.TextSize = 14
+            input.TextSize = 13
             input.Font = Enum.Font.Gotham
             input.PlaceholderText = config.Placeholder or "Type here..."
             input.PlaceholderColor3 = theme.TextSecondary
             input.Parent = container
             
             local inputCorner = Instance.new("UICorner")
-            inputCorner.CornerRadius = UDim.new(0, 6)
+            inputCorner.CornerRadius = UDim.new(0, 4)
             inputCorner.Parent = input
             
             local value = config.Default or ""
             
-            input.FocusLost:Connect(function(enterPressed)
+            input.FocusLost:Connect(function()
                 value = input.Text
                 if config.Callback then
                     pcall(config.Callback, value)
@@ -749,28 +709,92 @@ function NovaUI:CreateWindow(config)
             end)
             
             return {
-                Set = function(self, newText)
-                    value = newText
-                    input.Text = newText
-                end,
+                Set = function(_, text) value = text; input.Text = text end,
                 Get = function() return value end
             }
+        end
+        
+        function tabContent:CreateParagraph(config)
+            local container = Instance.new("Frame")
+            container.Size = UDim2.new(1, -12, 0, 0)
+            container.Position = UDim2.new(0, 6, 0, 0)
+            container.BackgroundColor3 = theme.Code
+            container.BackgroundTransparency = 0.5
+            container.BorderSizePixel = 0
+            container.Parent = tabContent
+            
+            local containerCorner = Instance.new("UICorner")
+            containerCorner.CornerRadius = UDim.new(0, 6)
+            containerCorner.Parent = container
+            
+            local text = Instance.new("TextLabel")
+            text.Size = UDim2.new(1, -24, 0, 0)
+            text.Position = UDim2.new(0, 12, 0, 8)
+            text.BackgroundTransparency = 1
+            text.Text = config.Text or "// Insert your text here"
+            text.TextColor3 = theme.TextSecondary
+            text.TextSize = 12
+            text.TextXAlignment = Enum.TextXAlignment.Left
+            text.TextWrapped = true
+            text.Font = Enum.Font.Gotham
+            text.Parent = container
+            
+            local textBounds = text.TextBounds
+            local height = textBounds.Y + 16
+            container.Size = UDim2.new(1, -12, 0, height)
+            text.Size = UDim2.new(1, -24, 0, textBounds.Y)
+            
+            return container
+        end
+        
+        -- Tab seçme ve düzenleme
+        local tabObj = {
+            _btn = tabBtn,
+            _content = tabContent,
+            _name = name,
+            CreateSection = tabContent.CreateSection,
+            CreateButton = tabContent.CreateButton,
+            CreateToggle = tabContent.CreateToggle,
+            CreateSlider = tabContent.CreateSlider,
+            CreateDropdown = tabContent.CreateDropdown,
+            CreateInput = tabContent.CreateInput,
+            CreateParagraph = tabContent.CreateParagraph,
+        }
+        
+        tabBtn.MouseButton1Click:Connect(function()
+            self:SelectTab(name)
+        end)
+        
+        tabBtn.MouseEnter:Connect(function()
+            if self._currentTab ~= name then
+                TS:Create(tabBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
+            end
+        end)
+        tabBtn.MouseLeave:Connect(function()
+            if self._currentTab ~= name then
+                TS:Create(tabBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.7}):Play()
+            end
+        end)
+        
+        self._tabs[name] = tabObj
+        
+        if not self._currentTab then
+            self:SelectTab(name)
         end
         
         return tabObj
     end
     
-    -- Tab seçme
+    -- Tab seçme fonksiyonu
     function self:SelectTab(name)
         if self._currentTab == name then return end
         
-        -- Eski tab'ı gizle
         if self._currentTab then
             local oldTab = self._tabs[self._currentTab]
             if oldTab then
                 oldTab._content.Visible = false
-                TweenService:Create(oldTab._button, TweenInfo.new(0.2), {
-                    BackgroundTransparency = 0.8,
+                TS:Create(oldTab._btn, TweenInfo.new(0.15), {
+                    BackgroundTransparency = 0.7,
                     TextColor3 = self._theme.TextSecondary
                 }):Play()
             end
@@ -780,51 +804,44 @@ function NovaUI:CreateWindow(config)
         local newTab = self._tabs[name]
         if newTab then
             newTab._content.Visible = true
-            TweenService:Create(newTab._button, TweenInfo.new(0.2), {
+            TS:Create(newTab._btn, TweenInfo.new(0.15), {
                 BackgroundTransparency = 0.2,
                 TextColor3 = self._theme.Text
             }):Play()
         end
     end
     
-    -- Tema değiştirme
-    function self:SetTheme(themeName)
-        local newTheme = NovaUI.Theme[themeName]
-        if not newTheme then return end
-        
-        self._theme = newTheme
-        -- UI'ı güncelle (basitlik için sadece birkaç örnek)
-        self._window.BackgroundColor3 = newTheme.Background
-        self._window.TitleBar.BackgroundColor3 = newTheme.Surface
-        -- ... diğer theme güncellemeleri
+    -- Status güncelleme
+    function self:SetStatus(text)
+        statusText.Text = "● " .. text
     end
     
-    -- Pencereyi kapat
-    function self:Destroy()
-        self._screenGui:Destroy()
-    end
-    
-    -- Bildirim gösterme
+    -- Bildirim
     function self:Notify(config)
-        NovaUI:Notify(config)
+        NovaAI:Notify(config)
     end
     
-    table.insert(NovaUI.Windows, self)
+    -- Kapatma
+    function self:Destroy()
+        sg:Destroy()
+    end
+    
+    table.insert(NovaAI.Windows, self)
     return self
 end
 
 -- ============================================
--- Bildirim Sistemi
+-- BİLDİRİM SİSTEMİ
 -- ============================================
-function NovaUI:Notify(config)
-    local theme = self.CurrentTheme or NovaUI.Theme.Dark
-    local container = self._notificationContainer
+function NovaAI:Notify(config)
+    local theme = NovaAI.Theme.Dark
+    local container = NovaAI._notifContainer
     
     if not container then
         container = Instance.new("Frame")
         container.Name = "Notifications"
-        container.Size = UDim2.new(0, 320, 0, 0)
-        container.Position = UDim2.new(1, -340, 0, 12)
+        container.Size = UDim2.new(0, 340, 0, 0)
+        container.Position = UDim2.new(1, -360, 0, 12)
         container.BackgroundTransparency = 1
         container.Parent = (gethui and gethui()) or CoreGui
         
@@ -833,7 +850,7 @@ function NovaUI:Notify(config)
         layout.SortOrder = Enum.SortOrder.LayoutOrder
         layout.Parent = container
         
-        self._notificationContainer = container
+        NovaAI._notifContainer = container
     end
     
     local notif = Instance.new("Frame")
@@ -848,55 +865,56 @@ function NovaUI:Notify(config)
     notifCorner.CornerRadius = UDim.new(0, 8)
     notifCorner.Parent = notif
     
-    -- İçerik
+    -- Sol kenar çizgisi
+    local line = Instance.new("Frame")
+    line.Size = UDim2.new(0, 4, 1, 0)
+    line.BackgroundColor3 = theme.Primary
+    line.BorderSizePixel = 0
+    line.Parent = notif
+    
     local content = Instance.new("Frame")
     content.Size = UDim2.new(1, -24, 0, 0)
-    content.Position = UDim2.new(0, 12, 0, 12)
+    content.Position = UDim2.new(0, 16, 0, 10)
     content.BackgroundTransparency = 1
     content.Parent = notif
     
-    -- Başlık
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, 0, 0, 20)
     title.BackgroundTransparency = 1
     title.Text = config.Title or "Notification"
     title.TextColor3 = theme.Text
-    title.TextSize = 15
+    title.TextSize = 14
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Font = Enum.Font.GothamSemibold
     title.Parent = content
     
-    -- Mesaj
-    local message = Instance.new("TextLabel")
-    message.Size = UDim2.new(1, 0, 0, 0)
-    message.Position = UDim2.new(0, 0, 0, 24)
-    message.BackgroundTransparency = 1
-    message.Text = config.Message or ""
-    message.TextColor3 = theme.TextSecondary
-    message.TextSize = 13
-    message.TextXAlignment = Enum.TextXAlignment.Left
-    message.TextWrapped = true
-    message.Font = Enum.Font.Gotham
-    message.Parent = content
+    local msg = Instance.new("TextLabel")
+    msg.Size = UDim2.new(1, 0, 0, 0)
+    msg.Position = UDim2.new(0, 0, 0, 22)
+    msg.BackgroundTransparency = 1
+    msg.Text = config.Message or ""
+    msg.TextColor3 = theme.TextSecondary
+    msg.TextSize = 12
+    msg.TextXAlignment = Enum.TextXAlignment.Left
+    msg.TextWrapped = true
+    msg.Font = Enum.Font.Gotham
+    msg.Parent = content
     
-    -- Boyutları hesapla
-    local textBounds = message.TextBounds
-    local height = 24 + textBounds.Y + 12 + 12
-    content.Size = UDim2.new(1, 0, 0, height)
-    message.Size = UDim2.new(1, 0, 0, textBounds.Y)
-    notif.Size = UDim2.new(1, 0, 0, height + 24)
+    local tb = msg.TextBounds
+    local h = 22 + tb.Y + 10
+    content.Size = UDim2.new(1, 0, 0, h)
+    msg.Size = UDim2.new(1, 0, 0, tb.Y)
+    notif.Size = UDim2.new(1, 0, 0, h + 20)
     
-    -- Giriş animasyonu
     notif.BackgroundTransparency = 0
-    notif.Position = UDim2.new(0, 0, 0, -height - 24)
-    TweenService:Create(notif, TweenInfo.new(0.4, Enum.EasingStyle.Cubic), {
+    notif.Position = UDim2.new(0, 0, 0, -h - 20)
+    TS:Create(notif, TweenInfo.new(0.4, Enum.EasingStyle.Cubic), {
         Position = UDim2.new(0, 0, 0, 0)
     }):Play()
     
-    -- Otomatik kapatma
     task.delay(config.Duration or 4, function()
-        TweenService:Create(notif, TweenInfo.new(0.4, Enum.EasingStyle.Cubic), {
-            Position = UDim2.new(0, 0, 0, -height - 24),
+        TS:Create(notif, TweenInfo.new(0.4, Enum.EasingStyle.Cubic), {
+            Position = UDim2.new(0, 0, 0, -h - 20),
             BackgroundTransparency = 1
         }):Play()
         task.wait(0.5)
@@ -905,8 +923,8 @@ function NovaUI:Notify(config)
 end
 
 -- ============================================
--- Başlangıç
+-- BAŞLATMA
 -- ============================================
-NovaUI.CurrentTheme = NovaUI.Theme.Dark
+NovaAI.CurrentTheme = NovaAI.Theme.Dark
 
-return NovaUI
+return NovaAI
