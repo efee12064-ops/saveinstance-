@@ -2364,7 +2364,7 @@ local Passed, Statement = pcall(function()
 				Content:Set(Content.State)
 			end
 			--
-			return Content
+			return library
 		end
 	end
 end)
