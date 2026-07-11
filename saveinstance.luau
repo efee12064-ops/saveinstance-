@@ -3936,28 +3936,8 @@ end
 												value = ldecompile(instance)
 
 if value then
-    -- Eski decompiler başlıklarını temizle
-    value = string.gsub(value, "%-%- Decompiled with .-\n", "")
-    
-    -- Dinamik Bilgiler
-    local scriptName = instance.Name
-    local className = instance.ClassName
-    
-local projectRealHeader = string.format([=[
---[[
-__________                   __               __    __________              .__
-\______   \_______  ____    |__| ____   _____/  |_  \______   \ ____ _____  |  |
- |     ___/\_  __ \/  _ \   |  |/ __ \_/ ___\   __\  |       _// __ \\__  \ |  |
- |    |     |  | \(  <_> )  |  \  ___/\  \___|  |    |    |   \  ___/ / __ \|  |__
- |____|     |__|   \____/\__|  |\___  >\___  >__|    |____|_  /\___  >____  /____/
-                        \______|    \/     \/               \/     \/     \/
-]]
---                           Project Real  |  Luau Decompiler
---                                   Made by @zinvera
---                        File: %s.%s
-]=], className, scriptName)
-    
-    value = projectRealHeader .. "\n" .. value
+    -- Project Real watermark'ını tamamen sil
+    value = string.gsub(value, "%-%-%[%[.-Project Real.-functions.-\n", "")
 end
 												if SaveBytecode then
 													local output = SaveBytecode(instance)
