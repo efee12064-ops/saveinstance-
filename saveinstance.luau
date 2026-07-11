@@ -3943,8 +3943,7 @@ if value then
     local scriptName = instance.Name
     local className = instance.ClassName
     
-    -- Project Real Başlığı (sadece sabit bilgiler)
-    local projectRealHeader = string.format([[
+local projectRealHeader = string.format([=[
 --[[
 __________                   __               __    __________              .__
 \______   \_______  ____    |__| ____   _____/  |_  \______   \ ____ _____  |  |
@@ -3956,7 +3955,7 @@ __________                   __               __    __________              .__
 --                           Project Real  |  Luau Decompiler
 --                                   Made by @zinvera
 --                        File: %s.%s
-]], className, scriptName)
+]=], className, scriptName)
     
     value = projectRealHeader .. "\n" .. value
 end
