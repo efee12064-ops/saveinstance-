@@ -3934,6 +3934,32 @@ end
 												value = "-- [FilteringEnabled] Server Scripts are IMPOSSIBLE to save" -- TODO: Could be not just server scripts in the future
 											else
 												value = ldecompile(instance)
+
+if value then
+    -- Eski decompiler başlıklarını temizle
+    value = string.gsub(value, "%-%- Decompiled with .-\n", "")
+    
+    -- Dinamik Bilgiler
+    local scriptName = instance.Name
+    local className = instance.ClassName
+    
+    -- Project Real Başlığı (sadece sabit bilgiler)
+    local projectRealHeader = string.format([[
+--[[
+__________                   __               __    __________              .__
+\______   \_______  ____    |__| ____   _____/  |_  \______   \ ____ _____  |  |
+ |     ___/\_  __ \/  _ \   |  |/ __ \_/ ___\   __\  |       _// __ \\__  \ |  |
+ |    |     |  | \(  <_> )  |  \  ___/\  \___|  |    |    |   \  ___/ / __ \|  |__
+ |____|     |__|   \____/\__|  |\___  >\___  >__|    |____|_  /\___  >____  /____/
+                        \______|    \/     \/               \/     \/     \/
+]]
+--                           Project Real  |  Luau Decompiler
+--                                   Made by @zinvera
+--                        File: %s.%s
+]], className, scriptName)
+    
+    value = projectRealHeader .. "\n" .. value
+end
 												if SaveBytecode then
 													local output = SaveBytecode(instance)
 													if output then
