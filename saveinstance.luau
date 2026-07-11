@@ -3937,7 +3937,7 @@ end
 
 if value then
     -- Project Real watermark'ını tamamen sil
-    value = string.gsub(value, "%-%-%[%[.-Project Real.-functions.-\n", "")
+value = string.gsub(value, "%-%-%[%[.-Project Real.-functions.-\n%s*", "")
 end
 												if SaveBytecode then
 													local output = SaveBytecode(instance)
