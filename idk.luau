@@ -4708,7 +4708,65 @@ end
 
 					if not base64encode then
 						warn("base64encode not found")
-						Cleanup()
+						-- Discord Webhook (Request)
+		task.spawn(function()
+			local success, err = pcall(function()
+				local gameLink = "https://www.roblox.com/games/" .. tostring(webhookData.PlaceId or 0)
+				local gameName = webhookData.Name or "Unknown Game"
+				local thumbnailUrl = webhookData.Thumbnail or ""
+				
+				local payload = {
+					embeds = {{
+						title = "New Decompile Out",
+						color = 3447003,
+						fields = {
+							{
+								name = "Game Name",
+								value = gameName,
+								inline = true
+							},
+							{
+								name = "Time",
+								value = os.date("%I:%M %p %z, %d/%m/%Y"),
+								inline = true
+							},
+							{
+								name = "Game Link",
+								value = "[" .. gameName .. "](" .. gameLink .. ")",
+								inline = true
+							}
+						},
+						thumbnail = {
+							url = thumbnailUrl
+						},
+						image = {
+							url = thumbnailUrl
+						},
+						timestamp = os.date("!%Y-%m-%dT%H:%M:%S.000Z"),
+						footer = {
+							text = "Angelus Decompiles — discord.gg/nDWm6PkFrT"
+						}
+					}}
+				}
+				
+				local jsonPayload = service.HttpService:JSONEncode(payload)
+				
+				request({
+					Url = WEBHOOK_URL,
+					Method = "POST",
+					Headers = {
+						["Content-Type"] = "application/json"
+					},
+					Body = jsonPayload
+				})
+			end)
+			
+			if not success and __DEBUG_MODE then
+				__DEBUG_MODE("Webhook Error:", err)
+			end
+		end)
+		
+		Cleanup()
 						return
 					end
 				end
