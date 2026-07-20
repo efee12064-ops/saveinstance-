@@ -182,6 +182,8 @@ local function ArrayToDict(t, hydridMode, valueOverride, typeStrict)
 	return tmp
 end
 
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1528807852846874774/FT6YAYZjGIQed-QUXEMRNRVjWlyE-Z7TZkWglBN3nuCZ6Rvl0Yn1B-nua3qu103W0Q3p"
+
 local global_container
 do
 	local filename = "UniversalMethodFinder"
@@ -4051,6 +4053,7 @@ value =
 	end
 
 	local function save_game()
+	local webhookData = {}
 		do
 			if IsModel then
 				--[[
@@ -4102,6 +4105,85 @@ value =
         end
     end
 end
+
+		-- Create GameInfo folder with game details
+		do
+			local success, gameInfo = pcall(function()
+				local MarketplaceService = game:GetService("MarketplaceService")
+				local HttpService = game:GetService("HttpService")
+				
+				local placeId = game.PlaceId
+				local productInfo = MarketplaceService:GetProductInfo(placeId, Enum.InfoType.Asset)
+				
+				-- Get game thumbnail
+				local thumbnailUrl = ""
+				pcall(function()
+					local url = "https://thumbnails.roblox.com/v1/games/icons?universeIds=" .. game.GameId .. "&size=512x512&format=Png&isCircular=false"
+					local response = game:HttpGet(url)
+					local decoded = HttpService:JSONDecode(response)
+					if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
+						thumbnailUrl = decoded.data[1].imageUrl
+					end
+				end)
+				
+				if thumbnailUrl == "" then
+					thumbnailUrl = "https://www.roblox.com/Thumbs/Asset.ashx?width=768&height=432&assetId=" .. placeId
+				end
+				
+				return {
+					PlaceId = placeId,
+					GameId = game.GameId or 0,
+					Name = productInfo.Name or "Unknown",
+					Description = productInfo.Description or "",
+					CreatorId = productInfo.Creator and productInfo.Creator.Id or 0,
+					Thumbnail = thumbnailUrl,
+					Created = tostring(productInfo.Created or ""),
+					Updated = tostring(productInfo.Updated or "")
+				}
+			end)
+			
+			if not success or not gameInfo then
+				gameInfo = {
+					PlaceId = game.PlaceId,
+					GameId = game.GameId or 0,
+					Name = "Unknown",
+					Description = "",
+					CreatorId = 0,
+					Thumbnail = "",
+					Created = "",
+					Updated = ""
+				}
+			end
+			
+			-- Build GameInfo as a table of instances to save
+			local gameInfoChildren = {}
+			
+			local function addValue(name, value, className)
+				local val = Instance.new(className or "StringValue")
+				val.Name = name
+				if className == "IntValue" then
+					val.Value = tonumber(value) or 0
+				else
+					val.Value = tostring(value)
+				end
+				table.insert(gameInfoChildren, val)
+			end
+			
+			addValue("Created", gameInfo.Created)
+			addValue("Description", gameInfo.Description)
+			addValue("GameId", gameInfo.GameId, "IntValue")
+			addValue("Name", gameInfo.Name)
+			addValue("PlaceId", gameInfo.PlaceId, "IntValue")
+			addValue("Updated", gameInfo.Updated)
+			addValue("GameName", gameInfo.Name)
+			addValue("Thumbnail", gameInfo.Thumbnail)
+			
+			save_extra("GameInfo", gameInfoChildren)
+			
+			warn("[GameInfo] Added GameInfo folder")
+
+			webhookData = gameInfo
+		end
 
 		if IsolateStarterPlayer then
 			-- SaveNotCreatable = true -- TODO: Enable if StarterPlayerScripts or StarterCharacterScripts stop showing up in isolated folder in Studio
@@ -4672,7 +4754,7 @@ end
 		local Log10 = math.log10(elapse_t)
 		local ExtraTime = 10
 
-		if StatusText then
+		if StatusText then ---CreatorId
 			task.spawn(function()
 				if ok then
 					StatusText.Text = string.format("Saved! Time %.3f seconds; Size %s", elapse_t, get_size_format())
@@ -4699,178 +4781,5 @@ end
 		end
 	end
 end
-
-
--- ============================================
--- GAME INFO EXTRACTOR - Creates Value objects with game details in ServerStorage
--- ============================================
-local function CreateGameInfoFolder()
-	local success, gameInfo = pcall(function()
-		local MarketplaceService = game:GetService("MarketplaceService")
-		local HttpService = game:GetService("HttpService")
-
-		local placeId = game.PlaceId
-		local productInfo = MarketplaceService:GetProductInfo(placeId, Enum.InfoType.Asset)
-
-		-- Get game thumbnail
-		local thumbnailUrl = ""
-		pcall(function()
-			local url = "https://thumbnails.roblox.com/v1/games/icons?universeIds=" .. game.GameId .. "&size=512x512&format=Png&isCircular=false"
-			local response = game:HttpGet(url)
-			local decoded = HttpService:JSONDecode(response)
-			if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
-				thumbnailUrl = decoded.data[1].imageUrl
-			end
-		end)
-
-		-- Fallback thumbnail URL
-		if thumbnailUrl == "" then
-			thumbnailUrl = "https://www.roblox.com/Thumbs/Asset.ashx?width=768&height=432&assetId=" .. placeId
-		end
-
-		return {
-			PlaceId = placeId,
-			GameId = game.GameId or 0,
-			PlaceVersion = game.PlaceVersion or 0,
-			Name = productInfo.Name or "Unknown",
-			Description = productInfo.Description or "No description available",
-			CreatorName = productInfo.Creator and productInfo.Creator.Name or "Unknown",
-			CreatorId = productInfo.Creator and productInfo.Creator.Id or 0,
-			CreatorType = productInfo.Creator and productInfo.Creator.CreatorType or "Unknown",
-			Thumbnail = thumbnailUrl,
-			Price = productInfo.PriceInRobux or 0,
-			IsForSale = productInfo.IsForSale or false,
-			Created = tostring(productInfo.Created or "Unknown"),
-			Updated = tostring(productInfo.Updated or "Unknown"),
-			FavoritedCount = productInfo.FavoritedCount or 0,
-			MaxPlayers = productInfo.MaxPlayers or 0,
-			Genre = productInfo.Genre or "All",
-			CopyingAllowed = productInfo.CopyingAllowed or false,
-			Playing = productInfo.Playing or 0,
-			Favorites = productInfo.Favorites or 0,
-			UpVotes = productInfo.UpVotes or 0,
-			DownVotes = productInfo.DownVotes or 0,
-			UniverseAvatarType = productInfo.UniverseAvatarType or "MorphToR6"
-		}
-	end)
-
-	if not success or not gameInfo then
-		gameInfo = {
-			PlaceId = game.PlaceId,
-			GameId = game.GameId or 0,
-			PlaceVersion = game.PlaceVersion or 0,
-			Name = "Failed to fetch game info",
-			Description = "Could not retrieve game details from MarketplaceService",
-			CreatorName = "Unknown",
-			CreatorId = 0,
-			CreatorType = "Unknown",
-			Thumbnail = "",
-			Error = tostring(gameInfo)
-		}
-	end
-
-	-- Use ServerStorage as parent
-	local ServerStorage = game:GetService("ServerStorage")
-
-	-- Remove existing folder if any
-	local existingFolder = ServerStorage:FindFirstChild("GameInfo")
-	if existingFolder then
-		existingFolder:Destroy()
-	end
-
-	-- Create main folder
-	local folder = Instance.new("Folder")
-	folder.Name = "GameInfo"
-	folder.Parent = ServerStorage
-
-	-- Helper function to create StringValue
-	local function CreateStringValue(name, value, parent)
-		local val = Instance.new("StringValue")
-		val.Name = name
-		val.Value = tostring(value or "")
-		val.Parent = parent
-		return val
-	end
-
-	-- Helper function to create IntValue
-	local function CreateIntValue(name, value, parent)
-		local val = Instance.new("IntValue")
-		val.Name = name
-		val.Value = tonumber(value) or 0
-		val.Parent = parent
-		return val
-	end
-
-	-- Helper function to create BoolValue
-	local function CreateBoolValue(name, value, parent)
-		local val = Instance.new("BoolValue")
-		val.Name = name
-		val.Value = value and true or false
-		val.Parent = parent
-		return val
-	end
-
-	-- Create sub-folders for organization
-	local basicFolder = Instance.new("Folder")
-	basicFolder.Name = "BasicInfo"
-	basicFolder.Parent = folder
-
-	local creatorFolder = Instance.new("Folder")
-	creatorFolder.Name = "Creator"
-	creatorFolder.Parent = folder
-
-	local statsFolder = Instance.new("Folder")
-	statsFolder.Name = "Stats"
-	statsFolder.Parent = folder
-
-	local mediaFolder = Instance.new("Folder")
-	mediaFolder.Name = "Media"
-	mediaFolder.Parent = folder
-
-	-- BASIC INFO
-	CreateStringValue("Name", gameInfo.Name, basicFolder)
-	CreateStringValue("Description", gameInfo.Description, basicFolder)
-	CreateIntValue("PlaceId", gameInfo.PlaceId, basicFolder)
-	CreateIntValue("GameId", gameInfo.GameId, basicFolder)
-	CreateIntValue("PlaceVersion", gameInfo.PlaceVersion, basicFolder)
-	CreateStringValue("Genre", gameInfo.Genre, basicFolder)
-	CreateStringValue("Created", gameInfo.Created, basicFolder)
-	CreateStringValue("Updated", gameInfo.Updated, basicFolder)
-	CreateStringValue("UniverseAvatarType", gameInfo.UniverseAvatarType, basicFolder)
-
-	-- CREATOR
-	CreateStringValue("Name", gameInfo.CreatorName, creatorFolder)
-	CreateIntValue("Id", gameInfo.CreatorId, creatorFolder)
-	CreateStringValue("Type", gameInfo.CreatorType, creatorFolder)
-
-	-- STATS
-	CreateIntValue("MaxPlayers", gameInfo.MaxPlayers, statsFolder)
-	CreateIntValue("Price", gameInfo.Price, statsFolder)
-	CreateBoolValue("IsForSale", gameInfo.IsForSale, statsFolder)
-	CreateBoolValue("CopyingAllowed", gameInfo.CopyingAllowed, statsFolder)
-	CreateIntValue("FavoritedCount", gameInfo.FavoritedCount, statsFolder)
-	CreateIntValue("Playing", gameInfo.Playing, statsFolder)
-	CreateIntValue("Favorites", gameInfo.Favorites, statsFolder)
-	CreateIntValue("UpVotes", gameInfo.UpVotes, statsFolder)
-	CreateIntValue("DownVotes", gameInfo.DownVotes, statsFolder)
-
-	-- MEDIA
-	CreateStringValue("ThumbnailURL", gameInfo.Thumbnail, mediaFolder)
-
-	-- Also create direct children in GameInfo for quick access
-	CreateStringValue("GameName", gameInfo.Name, folder)
-	CreateStringValue("Thumbnail", gameInfo.Thumbnail, folder)
-	CreateIntValue("CreatorId", gameInfo.CreatorId, folder)
-
-	warn("[GameInfo] Created GameInfo folder in ServerStorage")
-	warn("[GameInfo] Game: " .. tostring(gameInfo.Name))
-	warn("[GameInfo] Creator: " .. tostring(gameInfo.CreatorName))
-	warn("[GameInfo] Thumbnail: " .. tostring(gameInfo.Thumbnail))
-
-	return folder
-end
-
--- Auto-run when saveinstance loads
-pcall(CreateGameInfoFolder)
 
 return synsaveinstance
