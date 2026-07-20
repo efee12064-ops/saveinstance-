@@ -4171,11 +4171,9 @@ end
 			
 			addValue("Created", gameInfo.Created)
 			addValue("Description", gameInfo.Description)
-			addValue("GameId", gameInfo.GameId, "IntValue")
 			addValue("Name", gameInfo.Name)
 			addValue("PlaceId", gameInfo.PlaceId, "IntValue")
 			addValue("Updated", gameInfo.Updated)
-			addValue("GameName", gameInfo.Name)
 			addValue("Thumbnail", gameInfo.Thumbnail)
 			
 			save_extra("GameInfo", gameInfoChildren)
@@ -4813,107 +4811,149 @@ end
 		local ExtraTime = 10
 
 				if StatusText then ---CreatorId
-			task.spawn(function()
-				if ok then
-					StatusText.Text = string.format("Saved! Time %.3f seconds; Size %s", elapse_t, get_size_format())
-					StatusText.TextColor3 = Color3.new(0, 1)
-					
-					-- 🔥 WEBHOOK - Decompile bittiğinde at
-					task.spawn(function()
-						local success, err = pcall(function()
-							local reqFunc = request or http_request or (syn and syn.request)
-							if not reqFunc then
-								warn("❌ request fonksiyonu bulunamadı")
-								return
-							end
-							
-							local HttpService = game:GetService("HttpService")
-							local gameLink = "https://www.roblox.com/games/" .. tostring(game.PlaceId or 0)
-							local gameName = "Unknown Game"
-							local thumbnailUrl = ""
-							
-							-- GameInfo'dan veri çekmeye çalış
-							pcall(function()
-								local MarketplaceService = game:GetService("MarketplaceService")
-								local productInfo = MarketplaceService:GetProductInfo(game.PlaceId, Enum.InfoType.Asset)
-								gameName = productInfo.Name or gameName
-								
-								local url = "https://thumbnails.roblox.com/v1/games/icons?universeIds=" .. game.GameId .. "&size=512x512&format=Png&isCircular=false"
-								local response = game:HttpGet(url)
-								local decoded = HttpService:JSONDecode(response)
-								if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
-									thumbnailUrl = decoded.data[1].imageUrl
-								end
-							end)
-							
-							if thumbnailUrl == "" then
-								thumbnailUrl = "https://www.roblox.com/Thumbs/Asset.ashx?width=768&height=432&assetId=" .. tostring(game.PlaceId or 0)
-							end
-							
-							local payload = {
-								embeds = {{
-									title = "🔥 New Decompile Out",
-									color = 3447003,
-									fields = {
-										{
-											name = "🎮 Game Name",
-											value = gameName,
-											inline = true
-										},
-										{
-											name = "⏰ Time",
-											value = os.date("%I:%M %p %z, %d/%m/%Y"),
-											inline = true
-										},
-										{
-											name = "🔗 Game Link",
-											value = "[" .. gameName .. "](" .. gameLink .. ")",
-											inline = true
-										},
-										{
-											name = "📦 File Size",
-											value = get_size_format(),
-											inline = true
-										},
-										{
-											name = "⏱️ Elapsed Time",
-											value = string.format("%.3f seconds", elapse_t),
-											inline = true
-										}
-									},
-									thumbnail = {
-										url = thumbnailUrl
-									},
-									image = {
-										url = thumbnailUrl
-									},
-									timestamp = os.date("!%Y-%m-%dT%H:%M:%S.000Z"),
-									footer = {
-										text = "Angelus Decompiles — discord.gg/nDWm6PkFrT"
-									}
-								}}
-							}
-							
-							local response = reqFunc({
-								Url = WEBHOOK_URL,
-								Method = "POST",
-								Headers = {
-									["Content-Type"] = "application/json"
-								},
-								Body = HttpService:JSONEncode(payload)
-							})
-							
-							if response and (response.StatusCode == 200 or response.StatusCode == 204) then
-								print("✅ Webhook gönderildi!")
-							else
-								warn("⚠️ Webhook yanıt kodu:", response and response.StatusCode or "N/A")
-							end
-						end)
-						
-						if not success then
-							warn("❌ Webhook hatası:", err)
-						end
-					end)
+			-- 🔥 WEBHOOK - Decompile bittiğinde at
+task.spawn(function()
+    local success, err = pcall(function()
+        local reqFunc = request or http_request or (syn and syn.request)
+        if not reqFunc then
+            warn("❌ request fonksiyonu bulunamadı")
+            return
+        end
+        
+        local HttpService = game:GetService("HttpService")
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        
+        local gameLink = "https://www.roblox.com/games/" .. tostring(game.PlaceId or 0)
+        local gameName = "Unknown Game"
+        local thumbnailUrl = ""
+        local creatorName = "Unknown"
+        local creatorId = 0
+        local visits = 0
+        local genre = "Unknown"
+        
+        -- GameInfo'dan veri çek
+        pcall(function()
+            local MarketplaceService = game:GetService("MarketplaceService")
+            local productInfo = MarketplaceService:GetProductInfo(game.PlaceId, Enum.InfoType.Asset)
+            gameName = productInfo.Name or gameName
+            creatorName = productInfo.Creator and productInfo.Creator.Name or "Unknown"
+            creatorId = productInfo.Creator and productInfo.Creator.Id or 0
+            
+            -- Thumbnail
+            local url = "https://thumbnails.roblox.com/v1/games/icons?universeIds=" .. game.GameId .. "&size=512x512&format=Png&isCircular=false"
+            local response = game:HttpGet(url)
+            local decoded = HttpService:JSONDecode(response)
+            if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
+                thumbnailUrl = decoded.data[1].imageUrl
+            end
+        end)
+        
+        if thumbnailUrl == "" then
+            thumbnailUrl = "https://www.roblox.com/Thumbs/Asset.ashx?width=768&height=432&assetId=" .. tostring(game.PlaceId or 0)
+        end
+        
+        -- Boyut hesapla (düzeltilmiş)
+        local function formatSize(size)
+            for i, unit in {"B", "KB", "MB", "GB", "TB"} do
+                if size < 1024^i then
+                    return math.floor(size / (1024^(i-1)) * 10) / 10 .. " " .. unit
+                end
+            end
+            return size .. " B"
+        end
+        
+        -- Script sayısını GameName
+        local scriptCount = 0
+        pcall(function()
+            for _, desc in ipairs(game:GetDescendants()) do
+                if desc:IsA("LocalScript") or desc:IsA("ModuleScript") or desc:IsA("Script") then
+                    scriptCount += 1
+                end
+            end
+        end)
+        
+        local payload = {
+            embeds = {{
+                title = "🔥 New Decompile Out",
+                color = 0xFF0000,
+                fields = {
+                    {
+                        name = "🎮 Game Name",
+                        value = gameName,
+                        inline = true
+                    },
+                    {
+                        name = "⏰ Time",
+                        value = os.date("%I:%M %p %z, %d/%m/%Y"),
+                        inline = true
+                    },
+                    {
+                        name = "🔗 Game Link",
+                        value = "[" .. gameName .. "](" .. gameLink .. ")",
+                        inline = true
+                    },
+                    {
+                        name = "👤 User",
+                        value = LocalPlayer and LocalPlayer.Name or "Unknown",
+                        inline = true
+                    },
+                    {
+                        name = "🛠️ Executor",
+                        value = identify_executor and table.concat({identify_executor()}, " ") or "Unknown",
+                        inline = true
+                    },
+                    {
+                        name = "📊 Mode",
+                        value = OPTIONS.mode or "unknown",
+                        inline = true
+                    },
+                    {
+                        name = "📦 File Size",
+                        value = formatSize(totalsize),
+                        inline = true
+                    },
+                    {
+                        name = "⏱️ Elapsed Time",
+                        value = string.format("%.3f seconds", elapse_t),
+                        inline = true
+                    },
+                    {
+                        name = "📝 Scripts",
+                        value = tostring(scriptCount),
+                        inline = true
+                    }
+                },
+                image = {
+                    url = thumbnailUrl
+                },
+                timestamp = os.date("!%Y-%m-%dT%H:%M:%S.000Z"),
+                footer = {
+                    text = "Angelus Decompiles — discord.gg/nDWm6PkFrT"
+                }
+            }}
+        }
+        
+        local response = reqFunc({
+            Url = WEBHOOK_URL,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = HttpService:JSONEncode(payload)
+        })
+        
+        if response and (response.StatusCode == 200 or response.StatusCode == 204) then
+            print("✅ Webhook gönderildi!")
+        else
+            warn("⚠️ Webhook yanıt kodu:", response and response.StatusCode or "N/A")
+        end
+    end)
+    
+    if not success then
+        warn("❌ Webhook hatası:", err)
+    end
+end)
 					-- 🔥 WEBHOOK SON
 					
 					task.wait(Log10 * 2 + ExtraTime)
