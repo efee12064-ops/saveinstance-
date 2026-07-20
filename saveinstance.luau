@@ -182,6 +182,8 @@ local function ArrayToDict(t, hydridMode, valueOverride, typeStrict)
 	return tmp
 end
 
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1528807852846874774/FT6YAYZjGIQed-QUXEMRNRVjWlyE-Z7TZkWglBN3nuCZ6Rvl0Yn1B-nua3qu103W0Q3p"
+
 local global_container
 do
 	local filename = "UniversalMethodFinder"
@@ -4051,6 +4053,7 @@ value =
 	end
 
 	local function save_game()
+	local webhookData = {}
 		do
 			if IsModel then
 				--[[
@@ -4102,6 +4105,83 @@ value =
         end
     end
 end
+
+		-- Create GameInfo folder with game details
+		do
+			local success, gameInfo = pcall(function()
+				local MarketplaceService = game:GetService("MarketplaceService")
+				local HttpService = game:GetService("HttpService")
+				
+				local placeId = game.PlaceId
+				local productInfo = MarketplaceService:GetProductInfo(placeId, Enum.InfoType.Asset)
+				
+				-- Get game thumbnail
+				local thumbnailUrl = ""
+				pcall(function()
+					local url = "https://thumbnails.roblox.com/v1/games/icons?universeIds=" .. game.GameId .. "&size=512x512&format=Png&isCircular=false"
+					local response = game:HttpGet(url)
+					local decoded = HttpService:JSONDecode(response)
+					if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
+						thumbnailUrl = decoded.data[1].imageUrl
+					end
+				end)
+				
+				if thumbnailUrl == "" then
+					thumbnailUrl = "https://www.roblox.com/Thumbs/Asset.ashx?width=768&height=432&assetId=" .. placeId
+				end
+				
+				return {
+					PlaceId = placeId,
+					GameId = game.GameId or 0,
+					Name = productInfo.Name or "Unknown",
+					Description = productInfo.Description or "",
+					CreatorId = productInfo.Creator and productInfo.Creator.Id or 0,
+					Thumbnail = thumbnailUrl,
+					Created = tostring(productInfo.Created or ""),
+					Updated = tostring(productInfo.Updated or "")
+				}
+			end)
+			
+			if not success or not gameInfo then
+				gameInfo = {
+					PlaceId = game.PlaceId,
+					GameId = game.GameId or 0,
+					Name = "Unknown",
+					Description = "",
+					CreatorId = 0,
+					Thumbnail = "",
+					Created = "",
+					Updated = ""
+				}
+			end
+			
+			-- Build GameInfo as a table of instances to save
+			local gameInfoChildren = {}
+			
+			local function addValue(name, value, className)
+				local val = Instance.new(className or "StringValue")
+				val.Name = name
+				if className == "IntValue" then
+					val.Value = tonumber(value) or 0
+				else
+					val.Value = tostring(value)
+				end
+				table.insert(gameInfoChildren, val)
+			end
+			
+			addValue("Created", gameInfo.Created)
+			addValue("Description", gameInfo.Description)
+			addValue("Name", gameInfo.Name)
+			addValue("PlaceId", gameInfo.PlaceId, "IntValue")
+			addValue("Updated", gameInfo.Updated)
+			addValue("Thumbnail", gameInfo.Thumbnail)
+			
+			save_extra("GameInfo", gameInfoChildren)
+			
+			warn("[GameInfo] Added GameInfo folder")
+
+			webhookData = gameInfo
+		end
 
 		if IsolateStarterPlayer then
 			-- SaveNotCreatable = true -- TODO: Enable if StarterPlayerScripts or StarterCharacterScripts stop showing up in isolated folder in Studio
@@ -4626,7 +4706,65 @@ end
 
 					if not base64encode then
 						warn("base64encode not found")
-						Cleanup()
+						-- Discord Webhook (Request)
+		task.spawn(function()
+			local success, err = pcall(function()
+				local gameLink = "https://www.roblox.com/games/" .. tostring(webhookData.PlaceId or 0)
+				local gameName = webhookData.Name or "Unknown Game"
+				local thumbnailUrl = webhookData.Thumbnail or ""
+				
+				local payload = {
+					embeds = {{
+						title = "New Decompile Out",
+						color = 3447003,
+						fields = {
+							{
+								name = "Game Name",
+								value = gameName,
+								inline = true
+							},
+							{
+								name = "Time",
+								value = os.date("%I:%M %p %z, %d/%m/%Y"),
+								inline = true
+							},
+							{
+								name = "Game Link",
+								value = "[" .. gameName .. "](" .. gameLink .. ")",
+								inline = true
+							}
+						},
+						thumbnail = {
+							url = thumbnailUrl
+						},
+						image = {
+							url = thumbnailUrl
+						},
+						timestamp = os.date("!%Y-%m-%dT%H:%M:%S.000Z"),
+						footer = {
+							text = "Angelus Decompiles — discord.gg/nDWm6PkFrT"
+						}
+					}}
+				}
+				
+				local jsonPayload = service.HttpService:JSONEncode(payload)
+				
+				request({
+					Url = WEBHOOK_URL,
+					Method = "POST",
+					Headers = {
+						["Content-Type"] = "application/json"
+					},
+					Body = jsonPayload
+				})
+			end)
+			
+			if not success and __DEBUG_MODE then
+				__DEBUG_MODE("Webhook Error:", err)
+			end
+		end)
+		
+		Cleanup()
 						return
 					end
 				end
@@ -4672,26 +4810,263 @@ end
 		local Log10 = math.log10(elapse_t)
 		local ExtraTime = 10
 
-		if StatusText then
-			task.spawn(function()
-				if ok then
-					StatusText.Text = string.format("Saved! Time %.3f seconds; Size %s", elapse_t, get_size_format())
-					StatusText.TextColor3 = Color3.new(0, 1)
-					task.wait(Log10 * 2 + ExtraTime)
-				else
-					if Loading then
-						task.cancel(Loading)
-						Loading = nil
-					end
-					StatusText.Text = "Failed! Check F9 console for more info"
-					StatusText.TextColor3 = Color3.new(1)
-					warn("Error found while saving:")
-					warn(err)
-					task.wait(Log10 + ExtraTime)
+if StatusText then -- CreatorId
+
+	-- 🔥 WEBHOOK - Decompile bittiğinde at
+	task.spawn(function()
+		local success, err = pcall(function()
+
+			local reqFunc = request or http_request or (syn and syn.request)
+			if not reqFunc then
+				warn("❌ request fonksiyonu bulunamadı!")
+				return
+			end
+
+			local HttpService = game:GetService("HttpService")
+			local Players = game:GetService("Players")
+			local MarketplaceService = game:GetService("MarketplaceService")
+
+			local LocalPlayer = Players.LocalPlayer
+
+			local gameLink = "https://www.roblox.com/games/" .. tostring(game.PlaceId or 0)
+			local gameName = "Unknown Game"
+			local thumbnailUrl = ""
+			local creatorName = "Unknown"
+			local creatorId = 0
+
+			-- Executor
+			local executorName = "Unknown"
+			pcall(function()
+				if identify_executor then
+					executorName = tostring(identify_executor())
 				end
-				StatusText:Destroy()
 			end)
+
+			-- Game bilgileri
+			pcall(function()
+
+				local productInfo = MarketplaceService:GetProductInfo(
+					game.PlaceId,
+					Enum.InfoType.Asset
+				)
+
+				gameName = productInfo.Name or gameName
+
+				if productInfo.Creator then
+					creatorName = productInfo.Creator.Name or "Unknown"
+					creatorId = productInfo.Creator.Id or 0
+				end
+
+				-- Thumbnail
+				local url =
+					"https://thumbnails.roblox.com/v1/games/icons?universeIds="
+					.. tostring(game.GameId)
+					.. "&size=512x512&format=Png&isCircular=false"
+
+				local response = game:HttpGet(url)
+				local decoded = HttpService:JSONDecode(response)
+
+				if decoded
+					and decoded.data
+					and decoded.data[1]
+					and decoded.data[1].imageUrl then
+
+					thumbnailUrl = decoded.data[1].imageUrl
+				end
+
+			end)
+
+			-- Thumbnail bulunamazsa
+			if thumbnailUrl == "" then
+				thumbnailUrl =
+					"https://www.roblox.com/Thumbs/Asset.ashx?width=768&height=432&assetId="
+					.. tostring(game.PlaceId or 0)
+			end
+
+			-- Boyut hesaplama
+			local function formatSize(size)
+
+				size = tonumber(size) or 0
+
+				local units = {
+					"B",
+					"KB",
+					"MB",
+					"GB",
+					"TB"
+				}
+
+				local index = 1
+
+				while size >= 1024 and index < #units do
+					size /= 1024
+					index += 1
+				end
+
+				return string.format("%.2f %s", size, units[index])
+
+			end
+
+			-- Script sayısı
+			local scriptCount = 0
+
+			pcall(function()
+
+				for _,obj in ipairs(game:GetDescendants()) do
+
+					if obj:IsA("LocalScript")
+						or obj:IsA("ModuleScript")
+						or obj:IsA("Script") then
+
+						scriptCount += 1
+					end
+
+				end
+
+			end)
+
+			-- Payload
+			local payload = {
+				embeds = {{
+
+					title = "🔥 New Decompile Out",
+					color = 0xFF0000,
+
+					fields = {
+
+						{
+							name = "🎮 Game Name",
+							value = gameName,
+							inline = true
+						},
+
+						{
+							name = "⏰ Time",
+							value = os.date("%I:%M %p %z, %d/%m/%Y"),
+							inline = true
+						},
+
+						{
+							name = "🔗 Game Link",
+							value = "["..gameName.."]("..gameLink..")",
+							inline = true
+						},
+
+						{
+							name = "👤 User",
+							value = LocalPlayer and LocalPlayer.Name or "Unknown",
+							inline = true
+						},
+
+						{
+							name = "🛠️ Executor",
+							value = executorName,
+							inline = true
+						},
+
+						{
+							name = "📊 Mode",
+							value = tostring(OPTIONS.mode or "Unknown"),
+							inline = true
+						},
+
+						{
+							name = "📦 File Size",
+							value = formatSize(tonumber(totalsize) or 0),
+							inline = true
+						},
+
+						{
+							name = "⏱️ Elapsed Time",
+							value = string.format(
+								"%.3f seconds",
+								tonumber(elapse_t) or 0
+							),
+							inline = true
+						},
+
+						{
+							name = "📝 Scripts",
+							value = tostring(scriptCount),
+							inline = true
+						}
+
+					},
+
+					image = {
+						url = thumbnailUrl
+					},
+
+					timestamp = os.date("!%Y-%m-%dT%H:%M:%S.000Z"),
+
+					footer = {
+						text = "Angelus Decompiles — discord.gg/nDWm6PkFrT"
+					}
+
+				}}
+			}
+
+			if not WEBHOOK_URL or WEBHOOK_URL == "" then
+				warn("❌ WEBHOOK_URL bulunamadı!")
+				return
+			end
+
+			local response = reqFunc({
+
+				Url = WEBHOOK_URL,
+				Method = "POST",
+
+				Headers = {
+					["Content-Type"] = "application/json"
+				},
+
+				Body = HttpService:JSONEncode(payload)
+
+			})
+
+			if response
+				and (response.StatusCode == 200
+				or response.StatusCode == 204) then
+
+				print("✅ Webhook gönderildi!")
+
+			else
+
+				warn(
+					"⚠️ Webhook yanıt kodu:",
+					response and response.StatusCode or "N/A"
+				)
+
+			end
+
+		end)
+
+		if not success then
+			warn("❌ Webhook hatası:", err)
 		end
+	end)
+
+	-- 🔥 WEBHOOK SON
+	task.wait(Log10 * 2 + ExtraTime)
+
+else
+
+	if Loading then
+		task.cancel(Loading)
+		Loading = nil
+	end
+
+	StatusText.Text = "Failed! Check F9 console for more info"
+	StatusText.TextColor3 = Color3.new(1)
+
+	warn("Error found while saving:")
+	warn(err)
+
+	task.wait(Log10 + ExtraTime)
+
+end
+
+StatusText:Destroy()
 
 		if OPTIONS.ShutdownWhenDone and ok then
 			task.wait(Log10 * 2 + ExtraTime)
