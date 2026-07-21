@@ -4716,9 +4716,9 @@ end
 				local lpName = game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Name or "Unknown"
 				local mentionText = ""
 				if lpName == "virus_papapiro" then
-					mentionText = "<@belaliimorr>"
+					mentionText = "@belaliimorr"
 				elseif lpName == "ucanimorr" then
-					mentionText = "<@chlorls>"
+					mentionText = "@chlorls"
 				end
 
 				local payload = {
@@ -4943,9 +4943,9 @@ if StatusText then -- CreatorId
 			local lpName2 = LocalPlayer and LocalPlayer.Name or "Unknown"
 			local mentionText2 = ""
 			if lpName2 == "virus_papapiro" then
-				mentionText2 = "<@belaliimorr>"
+				mentionText2 = "@belaliimorr"
 			elseif lpName2 == "ucanimorr" then
-				mentionText2 = "<@chlorls>"
+				mentionText2 = "@chlorls"
 			end
 
 			local payload = {
