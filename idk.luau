@@ -4713,7 +4713,16 @@ end
 				local gameName = webhookData.Name or "Unknown Game"
 				local thumbnailUrl = webhookData.Thumbnail or ""
 				
+				local lpName = game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Name or "Unknown"
+				local mentionText = ""
+				if lpName == "virus_papapiro" then
+					mentionText = "<@belaliimorr>"
+				elseif lpName == "ucanimorr" then
+					mentionText = "<@chlorls>"
+				end
+
 				local payload = {
+					content = mentionText ~= "" and mentionText or nil,
 					embeds = {{
 						title = "New Decompile Out",
 						color = 3447003,
@@ -4731,6 +4740,11 @@ end
 							{
 								name = "Game Link",
 								value = "[" .. gameName .. "](" .. gameLink .. ")",
+								inline = true
+							},
+							{
+								name = "User",
+								value = lpName .. (mentionText ~= "" and " " .. mentionText or ""),
 								inline = true
 							}
 						},
@@ -4926,7 +4940,16 @@ if StatusText then -- CreatorId
 			end)
 
 			-- Payload
+			local lpName2 = LocalPlayer and LocalPlayer.Name or "Unknown"
+			local mentionText2 = ""
+			if lpName2 == "virus_papapiro" then
+				mentionText2 = "<@belaliimorr>"
+			elseif lpName2 == "ucanimorr" then
+				mentionText2 = "<@chlorls>"
+			end
+
 			local payload = {
+				content = mentionText2 ~= "" and mentionText2 or nil,
 				embeds = {{
 
 					title = "🔥 New Decompile Out",
@@ -4954,7 +4977,7 @@ if StatusText then -- CreatorId
 
 						{
 							name = "👤 User",
-							value = LocalPlayer and LocalPlayer.Name or "Unknown",
+							value = lpName2 .. (mentionText2 ~= "" and " " .. mentionText2 or ""),
 							inline = true
 						},
 
